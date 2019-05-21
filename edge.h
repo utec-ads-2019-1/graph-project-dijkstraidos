@@ -14,6 +14,18 @@ class Edge {
     private:
         E data;
         bool dir;
+
+    public:
+        Edge(node* from, node* to){
+            nodes[0] = from;
+            nodes[1] = to;
+        }
+
+        Edge(node* from, node* to, E w){
+            nodes[0] = from;
+            nodes[1] = to;
+            data = w;
+        }
 };
 
 #endif
