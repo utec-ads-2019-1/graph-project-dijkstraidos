@@ -36,6 +36,7 @@ class Graph {
         NodeSeq nodes;
         NodeIte ni;
         EdgeIte ei;
+        bool directed = false;
 
     public:
         node* addVertex(N val){
@@ -53,15 +54,19 @@ class Graph {
         void addEdge(node* a, node* b){
             edge* edgeLTR = new edge(a, b);
             a->edges.emplace_back(edgeLTR);
-            edge* edgeRTL = new edge(b, a);
-            b->edges.emplace_back(edgeRTL);
+            if(!directed){
+                edge* edgeRTL = new edge(b, a);
+                b->edges.emplace_back(edgeRTL);
+            }
         }
 
         void addEdge(node* a, node* b, E w){
             edge* edgeLTR = new edge(a, b, w);
             a->edges.emplace_back(edgeLTR);
-            edge* edgeRTL = new edge(b, a, w);
-            b->edges.emplace_back(edgeRTL);
+            if(!directed){
+                edge* edgeRTL = new edge(b, a, w);
+                b->edges.emplace_back(edgeRTL);
+            }
         }
 
         self DFS(node* start){
@@ -121,21 +126,6 @@ class Graph {
             return BFSTree;
         }
 
-        self prim_MST(node* start){
-            class Comp{
-                public:
-                    bool operator()(edge* a, edge* b){
-                        return a->data < b->data;
-                    }
-            };
-
-            priority_queue<edge*, vector<edge*>, Comp> next(Comp);
-            next.push(start);
-
-            self MST;
-
-            while(
-            
 };
 
 typedef Graph<Traits> graph;
