@@ -6,13 +6,10 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-    graph test;
-    vector<Node<graph>*> nodes;
-    for(char c = 'A'; c<'E'; c++)
-        nodes.push_back(test.addVertex(c));
-    test.addEdge(nodes[0], nodes[1]);
-    test.addEdge(nodes[0], nodes[2]);
-    test.DFS(nodes[0]);
-    test.BFS(nodes[0]);
+    graph test("graph.txt");
+    cout<<endl<<"BFS:"<<endl;
+    test.BFS(0);
+    cout<<endl<<"DFS:"<<endl;
+    test.DFS(0);
     return EXIT_SUCCESS;
 }

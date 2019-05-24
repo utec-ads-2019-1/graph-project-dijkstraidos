@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <utility>
 #include <queue>
+#include <fstream>
 
 #include "node.h"
 #include "edge.h"
@@ -37,8 +38,43 @@ class Graph {
         NodeIte ni;
         EdgeIte ei;
         bool directed = false;
+        bool weighted = false;
 
     public:
+        static self* buildFromFile(string filename){
+            return new self(filename);
+        }
+
+        Graph() = default;
+
+        Graph(string filename){
+            ifstream file(filename);
+            int num_of_vertices, num_of_edges;
+
+            file>>num_of_vertices>>num_of_edges;
+            file>>directed>>weighted;
+
+            double x, y;
+            N data;
+            for(int i = 0; i<num_of_vertices; i++){
+                file>>data>>x>>y;
+                nodes.push_back(new node(data, x, y));
+            }
+
+            int l, r;
+            E w;
+            for(int i = 0; i<num_of_edges; i++){
+                file>>l>>r;
+                if(weighted){
+                    file>>w;
+                    addEdge(l, r, w);
+                }
+                else{
+                    addEdge(l, r);
+                }
+            }
+        }
+
         node* addVertex(N val){
             node* newNode = new node(val);
             nodes.push_back(newNode);
@@ -69,63 +105,83 @@ class Graph {
             }
         }
 
-        self DFS(node* start){
-            unordered_map<node*, bool> vis;
+        void addEdge(int a, int b){
+            addEdge(nodes[a], nodes[b]);
+        }
+
+        void addEdge(int a, int b, E w){
+            addEdge(nodes[a], nodes[b], w);
+        }
+
+        self DFS(int start){
+            unordered_map<node*, int> node_to_index;
+            vector<bool> vis(nodes.size(), false);
+            stack<pair<int, int>> next;
+            next.push(make_pair(start, -1));
+
             self DFSTree;
-            stack<pair<node*, node*>> next;
-            next.push(make_pair(start,nullptr));
+            for(int i = 0; i<nodes.size(); i++){
+                DFSTree.addVertex(nodes[i]);
+                node_to_index[nodes[i]] = i; 
+            }
 
             while(!next.empty()){
-                node* current = next.top().first;
-                node* dad = next.top().second;
+                int current = next.top().first;
+                int dad = next.top().second;
                 next.pop();
 
                 if(vis[current]) continue;
                 vis[current] = true;
-                cout<<current->data<<endl;
+                cout<<nodes[current]->data<<endl;
 
-                node* newVertex = DFSTree.addVertex(current);
-                if(dad){
-                    DFSTree.addEdge(dad, newVertex);
+                if(dad >= 0){
+                    DFSTree.addEdge(dad, current);
                 }
 
-                for(edge* ep : current->edges){
-                    if(vis[ep->nodes[1]]) continue;
-                    next.push(make_pair(ep->nodes[1], newVertex));
+                for(edge* ep : nodes[current]->edges){
+                    int vertex = node_to_index[ep->nodes[1]];
+                    if(vis[vertex]) continue;
+                    next.push(make_pair(vertex, current));
                 }
             }
 
             return DFSTree;
         }
 
-        self BFS(node* start){
-            unordered_map<node*, bool> vis;
+        self BFS(int start){
+            unordered_map<node*, int> node_to_index;
+            vector<bool> vis(nodes.size(), false);
+            queue<pair<int, int>> next;
+            next.push(make_pair(start, -1));
+
             self BFSTree;
-            queue<pair<node*, node*>> next;
-            next.push(make_pair(start, nullptr));
+            for(int i = 0; i<nodes.size(); i++){
+                BFSTree.addVertex(nodes[i]);
+                node_to_index[nodes[i]] = i; 
+            }
 
             vis[start] = true;
             while(!next.empty()){
-                node* current = next.front().first;
-                node* dad = next.front().second;
+                int current = next.front().first;
+                int dad = next.front().second;
                 next.pop();
-                cout<<current->data<<endl;
+                cout<<nodes[current]->data<<endl;
 
-                node* newVertex = BFSTree.addVertex(current);
-                if(dad){
-                    BFSTree.addEdge(dad, newVertex);
+                if(dad >= 0){
+                    BFSTree.addEdge(dad, current);
                 }
 
-                for(edge* ep : current->edges){
-                    if(vis[ep->nodes[1]]) continue;
-                    next.push(make_pair(ep->nodes[1], newVertex));
-                    vis[ep->nodes[1]] = true;
+                for(edge* ep : nodes[current]->edges){
+                    int vertex = node_to_index[ep->nodes[1]];
+                    if(vis[vertex]) continue;
+                    next.push(make_pair(vertex, current));
+                    vis[vertex] = true;
                 }
             }
 
             return BFSTree;
         }
-
+        
 };
 
 typedef Graph<Traits> graph;

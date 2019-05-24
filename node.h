@@ -20,8 +20,15 @@ class Node {
         Node(N data){
             this->data = data;
         }
+        Node(N data, double x, double y){
+            this->data = data;
+            this->x = x;
+            this->y = y;
+        }
         Node(Node* node){
             this->data = node->data;
+            this->x = node->x;
+            this->y = node->y;
         }
 };
 
