@@ -31,7 +31,6 @@ class Node {
                     break;
                 }
             }
-
         }
 
         ~Node(){

@@ -32,7 +32,9 @@ int main(int argc, char *argv[]) {
 
     cout << test.countEdges() << endl;*/
 
-    cout << test.isConnected() << endl;
+    cout << test.nonDirected_isConnected() << endl;
+
+    test.printAllDegrees();
 
     cout << "Depth First Search:\n";
     test.DFS(nodes[0]);

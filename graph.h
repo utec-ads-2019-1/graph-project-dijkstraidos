@@ -37,8 +37,14 @@ class Graph {
         NodeSeq nodes;
         NodeIte ni;
         EdgeIte ei;
+        bool directed; //0 para not directed, 1 to Directed
 
     public:
+
+        bool isDirected(){
+            return directed;
+        }
+
         node* addVertex(N val){
             node* newNode = new node(val);
             nodes.push_back(newNode);
@@ -51,11 +57,23 @@ class Graph {
             return newNode;
         }
 
+
         void addEdge(node* a, node* b){
             edge* edgeLTR = new edge(a, b);
             a->edges.emplace_back(edgeLTR);
             edge* edgeRTL = new edge(b, a);
             b->edges.emplace_back(edgeRTL);
+        }
+
+
+        void directed_addEdge(node* a, node* b){
+            edge* newEdge = new edge(a, b);
+            a->edges.emplace_back(newEdge);
+        }
+
+        void directed_addEdge(node* a, node* b, E w){
+            edge* newEdge = new edge(a, b, w);
+            a->edges.emplace_back(newEdge);
         }
 
         void addEdge(node* a, node* b, E w){
@@ -86,25 +104,28 @@ class Graph {
             node2->removeEdge(node1);
         }
 
+        void directed_removeEdge(node * node1, node * node2){
+            node1->removeEdge(node2);
+        }
+
         bool findVertex(node * searched){
             if(find(nodes.begin(), nodes.end(), searched) != nodes.end())  return true;
             return false;
         }
 
         bool findEdge(node * node1, node * node2){
-            //if(find(nodes.begin(), nodes.end(), node2) == nodes.end()) throw ("No existe el nodo " << node1->data);
             if(!findVertex(node2)) throw ("No existe el nodo 2");
 
             ni = find(nodes.begin(), nodes.end(), node1);
             if(ni != nodes.end()){
                 for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ++ei){
-                    if((*ei)->nodes[0] == node2 or (*ei)->nodes[1] == node2) return true;
+                    if((*ei)->nodes[1] == node2) return true;
                 }
                 return false;
             }else throw ("No existe el nodo 1");
         }
 
-        int countEdges(){ //si es no dirigido
+        int nonDirected_countEdges(){
             int count = 0;
             for(ni = nodes.begin(); ni != nodes.end(); ni++){
                 count += (*ni)->edges.size();
@@ -112,15 +133,31 @@ class Graph {
             return count/2;
         }
 
-        bool isDense(float limit){
-            if((2*countEdges())/(nodes.size()*(nodes.size()-1)) > limit){
+        int directed_countEdges(){
+            int count = 0;
+            for(ni = nodes.begin(); ni != nodes.end(); ni++){
+                count += (*ni)->edges.size();
+            }
+            return count;
+        }
+
+        bool nonDirected_isDense(float limit){
+            if((2*nonDirected_countEdges())/(nodes.size()*(nodes.size()-1)) > limit){
                 return true;
             }
             return false;
         }
 
-        bool isConnected(){
-            if(nodes.size() == 0) throw ("Este grafo no tiene elementos") ;
+        bool directed_isDense(float limit){
+            if((directed_countEdges())/(nodes.size()*(nodes.size()-1)) > limit){
+                return true;
+            }
+            return false;
+        }
+
+
+        bool nonDirected_isConnected(){
+            if(nodes.size() == 0) throw ("Este grafo no tiene elementos");
             unordered_map<node*, bool> visited;
             queue<node*> next;
             next.push(nodes[0]);
@@ -142,26 +179,64 @@ class Graph {
             return false;
         }
 
+        bool directed_isConnected(){
+            if(nodes.size() == 0) throw ("Este grafo no tiene elementos");
+
+        }
+
+
         bool isStronglyConnected(){ //solo si es un grafo no dirigido
             //TODO
         }
 
-        bool isBipartite(){
-            list<node*> leftNodes;
-            list<node*> rightNodes;
+        /*bool isBipartite(){
+            unordered_map<node*, bool> leftNodes;
+            unordered_map<node*, bool> rightNodes;
+            queue<node*> next;
+
+            unordered_map<node*, bool> * currentSide;
+            unordered_map<node*, bool> * otherSide;
+
+            currentSide = &leftNodes;
+            otherSide = &rightNodes;
 
             for(ni = nodes.begin(); ni != nodes.end(); ni++){
+                if(leftNodes[*ni] or rightNodes[*ni]) continue;
+
+                (*currentSide)[*ni] = true;
+                for(ei = (*ni).edges.begin(); ei !=(*ni).edges.begin(); ei++){
+                    if((*currentSide)[(*ei)[1]]) return false;
+                    otherSide[(*ei)[1]] = true;
+                }
 
             }
+
             return true;
-        }
+        }*/
 
         void printTypes(){
             //TODO
         }
 
-        void printDegree(){
-            //TODO
+        void directed_printDegree(node * n){
+            int count = 0;
+            for(ni = nodes.begin(); ni != nodes.end(); ni++){
+                for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ei++){
+                    if(*ei == n) count++;
+                }
+            }
+
+            cout << "El vértice " << n->data << " tiene un grado de entrada de " << count << " y un grado de salida de " << n->edges.size() << endl;
+        }
+
+        void nonDirected_printDegree(node * n){
+            cout << "El vértice " << n->data << " tiene un grado de " << n->edges.size() << endl;
+        }
+
+        void printAllDegrees(){
+            for (ni = nodes.begin(); ni != nodes.end(); ni++){
+                nonDirected_printDegree(*ni);
+            }
         }
 
 
