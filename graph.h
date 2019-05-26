@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <utility>
 #include <queue>
+#include <climits>
+#include <map>
 
 #include "node.h"
 #include "edge.h"
@@ -126,6 +128,53 @@ class Graph {
             return BFSTree;
         }
 
+        self primsAlgorithm(node* r) {
+            map<node*, E> key(nodes.size(), 2147483647);
+            map<node*,node*> parent(nodes.size(), nullptr);
+            key[r] = 2147483647;
+            
+        }
+
+};
+
+template<typename T>
+class MinPriorityQueue{
+    typedef MinPriorityQueue<T> self;
+    private:
+        vector<T> A;
+
+        MinPriorityQueue() : A() {};
+
+        MinPriorityQueue(vector<T> v) : A(v) {};
+
+        int left(int i) {
+            return 2*i + 1;
+        }
+        
+        int right(int i) {
+            return 2*i + 2;
+        }
+
+        int parent(int i) {
+            return (i-1)/2;
+        }
+
+        self maxHeapify(int i) {
+            int l = left(i);
+            int r = right(i);
+            int largest;
+            if(l <= A.size() && A[l] >= A[i]) largest = l;
+            else largest = i;
+            if(r <= A.size() && A[r] > A[largest]) largest = r;
+            if(largest != i) {
+                swap(A[i], A[largest]);
+                maxHeapify(largest);
+            }
+        }
+
+        self buildMaxHeap(vector<T>& v) {
+            
+        }
 };
 
 typedef Graph<Traits> graph;
