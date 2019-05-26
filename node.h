@@ -23,6 +23,21 @@ class Node {
         Node(Node* node){
             this->data = node->data;
         }
+
+        void removeEdge(Node* nToRemove) {
+            for(auto it = edges.begin(); it != edges.end(); ++it){
+                if((*it)->nodes[0] == nToRemove or (*it)->nodes[1] == nToRemove){
+                    edges.erase(it);
+                    break;
+                }
+            }
+
+        }
+
+        ~Node(){
+            edges.clear();
+            delete this;
+        }
 };
 
 #endif

@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <utility>
 #include <queue>
+#include <algorithm>
 
 #include "node.h"
 #include "edge.h"
@@ -22,9 +23,9 @@ class Traits {
 template <typename Tr>
 class Graph {
     public:
-        typedef Graph<Tr> self;
-        typedef Node<self> node;
-        typedef Edge<self> edge;
+        typedef Graph<Tr> Self;
+        typedef Node<Self> node;
+        typedef Edge<Self> edge;
         typedef vector<node*> NodeSeq;
         typedef list<edge*> EdgeSeq;
         typedef typename Tr::N N;
@@ -64,9 +65,109 @@ class Graph {
             b->edges.emplace_back(edgeRTL);
         }
 
-        self DFS(node* start){
-            unordered_map<node*, bool> vis;
-            self DFSTree;
+        void removeVertex(node * nToRemove){
+            ni = find(nodes.begin(), nodes.end(), nToRemove);
+            if (ni != nodes.end()){ //si el nodo existe
+                for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ++ei){
+                    if((*ei)->nodes[0] == nToRemove){
+                        (*ei)->nodes[1]->removeEdge(nToRemove);
+                    }else{
+                        (*ei)->nodes[0]->removeEdge(nToRemove);
+                    }
+                }
+                nodes.erase(ni);
+            }else{
+                throw ("El vértice no existe");
+            }
+        }
+
+        void removeEdge(node * node1, node * node2){
+            node1->removeEdge(node2);
+            node2->removeEdge(node1);
+        }
+
+        bool findVertex(node * searched){
+            if(find(nodes.begin(), nodes.end(), searched) != nodes.end())  return true;
+            return false;
+        }
+
+        bool findEdge(node * node1, node * node2){
+            //if(find(nodes.begin(), nodes.end(), node2) == nodes.end()) throw ("No existe el nodo " << node1->data);
+            if(!findVertex(node2)) throw ("No existe el nodo 2");
+
+            ni = find(nodes.begin(), nodes.end(), node1);
+            if(ni != nodes.end()){
+                for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ++ei){
+                    if((*ei)->nodes[0] == node2 or (*ei)->nodes[1] == node2) return true;
+                }
+                return false;
+            }else throw ("No existe el nodo 1");
+        }
+
+        int countEdges(){ //si es no dirigido
+            int count = 0;
+            for(ni = nodes.begin(); ni != nodes.end(); ni++){
+                count += (*ni)->edges.size();
+            }
+            return count/2;
+        }
+
+        bool isDense(float limit){
+            if((2*countEdges())/(nodes.size()*(nodes.size()-1)) > limit){
+                return true;
+            }
+            return false;
+        }
+
+        bool isConnected(){
+            if(nodes.size() == 0) throw ("Este grafo no tiene elementos") ;
+            unordered_map<node*, bool> visited;
+            queue<node*> next;
+            next.push(nodes[0]);
+            node *current;
+
+            while(!next.empty()){
+                current = next.front();
+                next.pop(); //this should delete the one at the front
+
+                for(ei = current->edges.begin(); ei != current->edges.end(); ei++){
+                    if(!(visited[(*ei)->nodes[1]])) {
+                        next.push((*ei)->nodes[1]);
+                        visited[(*ei)->nodes[1]] = true;
+                    }
+                }
+            }
+
+            if(visited.size() == nodes.size()) return true;
+            return false;
+        }
+
+        bool isStronglyConnected(){ //solo si es un grafo no dirigido
+            //TODO
+        }
+
+        bool isBipartite(){
+            list<node*> leftNodes;
+            list<node*> rightNodes;
+
+            for(ni = nodes.begin(); ni != nodes.end(); ni++){
+
+            }
+            return true;
+        }
+
+        void printTypes(){
+            //TODO
+        }
+
+        void printDegree(){
+            //TODO
+        }
+
+
+        Self DFS(node* start){
+            unordered_map<node*, bool> visited;
+            Self DFSTree;
             stack<pair<node*, node*>> next;
             next.push(make_pair(start,nullptr));
 
@@ -75,8 +176,8 @@ class Graph {
                 node* dad = next.top().second;
                 next.pop();
 
-                if(vis[current]) continue;
-                vis[current] = true;
+                if(visited[current]) continue;
+                visited[current] = true;
                 cout<<current->data<<endl;
 
                 node* newVertex = DFSTree.addVertex(current);
@@ -85,7 +186,7 @@ class Graph {
                 }
 
                 for(edge* ep : current->edges){
-                    if(vis[ep->nodes[1]]) continue;
+                    if(visited[ep->nodes[1]]) continue;
                     next.push(make_pair(ep->nodes[1], newVertex));
                 }
             }
@@ -93,13 +194,13 @@ class Graph {
             return DFSTree;
         }
 
-        self BFS(node* start){
-            unordered_map<node*, bool> vis;
-            self BFSTree;
+        Self BFS(node* start){
+            unordered_map<node*, bool> visited;
+            Self BFSTree;
             queue<pair<node*, node*>> next;
             next.push(make_pair(start, nullptr));
 
-            vis[start] = true;
+            visited[start] = true;
             while(!next.empty()){
                 node* current = next.front().first;
                 node* dad = next.front().second;
@@ -112,16 +213,16 @@ class Graph {
                 }
 
                 for(edge* ep : current->edges){
-                    if(vis[ep->nodes[1]]) continue;
+                    if(visited[ep->nodes[1]]) continue;
                     next.push(make_pair(ep->nodes[1], newVertex));
-                    vis[ep->nodes[1]] = true;
+                    visited[ep->nodes[1]] = true;
                 }
             }
 
             return BFSTree;
         }
 
-        self prim_MST(node* start){
+        /*self prim_MST(node* start){
             class Comp{
                 public:
                     bool operator()(edge* a, edge* b){
@@ -134,7 +235,7 @@ class Graph {
 
             self MST;
 
-            while(
+            while(*/
             
 };
 
