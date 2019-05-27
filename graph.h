@@ -10,6 +10,7 @@
 #include <climits>
 #include <map>
 
+#include "minpriorityqueue.h"
 #include "node.h"
 #include "edge.h"
 
@@ -27,12 +28,24 @@ class Graph {
         typedef Graph<Tr> self;
         typedef Node<self> node;
         typedef Edge<self> edge;
+        typedef MinPriorityQueue<self> min_priority_queue;
         typedef vector<node*> NodeSeq;
         typedef list<edge*> EdgeSeq;
         typedef typename Tr::N N;
         typedef typename Tr::E E;
         typedef typename NodeSeq::iterator NodeIte;
         typedef typename EdgeSeq::iterator EdgeIte;
+
+        struct u {
+            node* n;
+            E key;
+            struct u* parent;
+            u(node* n) : n(n), key(INT_MAX), parent(nullptr) {}
+        };
+        typedef struct u U;
+
+        map<node*, U*> m;
+        map<pair<node*, node*> , E> weights;
 
     private:
         NodeSeq nodes;
@@ -124,56 +137,52 @@ class Graph {
                     vis[ep->nodes[1]] = true;
                 }
             }
-
             return BFSTree;
         }
 
-        self primsAlgorithm(node* r) {
-            map<node*, E> key(nodes.size(), 2147483647);
-            map<node*,node*> parent(nodes.size(), nullptr);
-            key[r] = 2147483647;
-            
-        }
-
-};
-
-template<typename T>
-class MinPriorityQueue{
-    typedef MinPriorityQueue<T> self;
-    private:
-        vector<T> A;
-
-        MinPriorityQueue() : A() {};
-
-        MinPriorityQueue(vector<T> v) : A(v) {};
-
-        int left(int i) {
-            return 2*i + 1;
-        }
-        
-        int right(int i) {
-            return 2*i + 2;
-        }
-
-        int parent(int i) {
-            return (i-1)/2;
-        }
-
-        self maxHeapify(int i) {
-            int l = left(i);
-            int r = right(i);
-            int largest;
-            if(l <= A.size() && A[l] >= A[i]) largest = l;
-            else largest = i;
-            if(r <= A.size() && A[r] > A[largest]) largest = r;
-            if(largest != i) {
-                swap(A[i], A[largest]);
-                maxHeapify(largest);
+        edge* findEdge(node* n1, node* n2) {
+            for(node* n : nodes) {
+                if(n == n1) return n1->edgeWith(n2);
+                if(n == n2) return n2->edgeWith(n1);
             }
+            throw std::string("These nodes are not part of the graph.");
         }
 
-        self buildMaxHeap(vector<T>& v) {
-            
+        E weight(node* n1, node* n2) {
+            // TODO: Handle the case when it's directed
+            if(weights.count({n1,n2}) == 0) {
+                edge* e1 = findEdge(n2,n1);
+                edge* e2 = findEdge(n1, n2);
+                weights[{n1,n2}] = e1->getData();
+                weights[{n2,n1}] = e2->getData();
+            }
+            return weights[{n1,n2}];
+        }
+
+        void MST_Prim(vector<pair<node*, U*> >& V, node* r) {
+            vector<pair<node*, U*> > Q;
+            map<node*,bool> inQ;
+            m.clear();
+            for(node* n : nodes) {
+                U* x = new U(n);
+                m[n] = x;
+                inQ[n] = true;
+                Q.push_back(make_pair(n,x));
+            }
+            m[r]->key = 0;
+            min_priority_queue::buildMinHeap(Q);
+            V = Q;
+            while(Q.size() > 0) {
+                U* u = min_priority_queue::heapExtractMin(Q);
+                inQ[u->n] = false;
+                for(edge* e : u->edges) {
+                    U* v = m[e->nodes[1]];
+                    if(inQ[v] && weight(u->n,v->n) < v) {
+                        v->parent = u;
+                        v->key = weight(u->n,v->n);
+                    }
+                }
+            }
         }
 };
 
