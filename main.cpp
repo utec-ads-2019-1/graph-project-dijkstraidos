@@ -14,5 +14,6 @@ int main(int argc, char *argv[]) {
     test.addEdge(nodes[0], nodes[2]);
     test.DFS(nodes[0]);
     test.BFS(nodes[0]);
+    test.MST_Prim(nodes[0]);
     return EXIT_SUCCESS;
 }

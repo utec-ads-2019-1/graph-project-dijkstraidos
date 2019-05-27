@@ -53,16 +53,14 @@ class MinPriorityQueue{
         }
     }
 
-    node* heapExtractMin(std::vector<node*>& A) {
+    static U* heapExtractMin(std::vector<std::pair<node*,U*> >& A) {
         if(A.size() < 1) throw std::string("heap underflow");
-        node* min = A[0];
+        U* min = A[0].second;
         A[0] = A[A.size()-1];
         A.pop_back();
         minHeapify(A,0);
         return min;
     }
-
-    static void doSomething(){std::cout<<"something"<<std::endl;}
 
     static void buildMinHeap(std::vector<std::pair<node*,U*> >& A) {
         int l = A.size()/2 - 1;

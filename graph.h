@@ -67,20 +67,24 @@ class Graph {
         }
 
         void addEdge(node* a, node* b){
-            edge* edgeLTR = new edge(a, b);
-            a->edges.emplace_back(edgeLTR);
-            if(!directed){
-                edge* edgeRTL = new edge(b, a);
-                b->edges.emplace_back(edgeRTL);
+            if(a != nullptr && b != nullptr) {
+                edge* edgeLTR = new edge(a, b);
+                a->edges.emplace_back(edgeLTR);
+                if(!directed){
+                    edge* edgeRTL = new edge(b, a);
+                    b->edges.emplace_back(edgeRTL);
+                }
             }
         }
 
         void addEdge(node* a, node* b, E w){
-            edge* edgeLTR = new edge(a, b, w);
-            a->edges.emplace_back(edgeLTR);
-            if(!directed){
-                edge* edgeRTL = new edge(b, a, w);
-                b->edges.emplace_back(edgeRTL);
+            if(a != nullptr && b != nullptr) {
+                edge* edgeLTR = new edge(a, b, w);
+                a->edges.emplace_back(edgeLTR);
+                if(!directed){
+                    edge* edgeRTL = new edge(b, a, w);
+                    b->edges.emplace_back(edgeRTL);
+                }
             }
         }
 
@@ -159,7 +163,7 @@ class Graph {
             return weights[{n1,n2}];
         }
 
-        void MST_Prim(vector<pair<node*, U*> >& V, node* r) {
+        self MST_Prim(node* r) {
             vector<pair<node*, U*> > Q;
             map<node*,bool> inQ;
             m.clear();
@@ -171,18 +175,27 @@ class Graph {
             }
             m[r]->key = 0;
             min_priority_queue::buildMinHeap(Q);
-            V = Q;
+            vector<pair<node*, U*> > V = Q;
             while(Q.size() > 0) {
                 U* u = min_priority_queue::heapExtractMin(Q);
                 inQ[u->n] = false;
-                for(edge* e : u->edges) {
+                for(edge* e : u->n->edges) {
                     U* v = m[e->nodes[1]];
-                    if(inQ[v] && weight(u->n,v->n) < v) {
+                    if(inQ[v->n] && weight(u->n,v->n) < v->key) {
                         v->parent = u;
                         v->key = weight(u->n,v->n);
                     }
                 }
             }
+            self MST;
+            for(pair<node*,U*> p : V) {
+                MST.addVertex(p.first);
+            }
+            for(pair<node*,U*> p : V) {
+                cout << "node " << p.first << " parent " << p.second->parent << endl;
+                MST.addEdge(p.first, p.second->parent ? p.second->parent->n : nullptr);
+            }
+            return MST;
         }
 };
 
