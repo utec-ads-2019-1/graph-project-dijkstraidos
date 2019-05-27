@@ -4,7 +4,8 @@
 #include <vector>
 #include <list>
 #include <stack>
-#include <unordered_map>
+#include <unordered_map>4
+#include <map>
 #include <utility>
 #include <queue>
 #include <algorithm>
@@ -37,9 +38,16 @@ class Graph {
         NodeSeq nodes;
         NodeIte ni;
         EdgeIte ei;
-        bool directed; //0 para not directed, 1 to Directed
+        bool directed = false; //0 for not directed, 1 to directed
+        bool weighted = false; //0 for not weighted, 1 to directed
 
     public:
+
+        Graph() = default;
+
+       Graph(bool directed) : directed(directed) {};
+
+       Graph(bool directed, bool weighted) : directed(directed), weighted(weighted) {};
 
         bool isDirected(){
             return directed;
@@ -57,8 +65,19 @@ class Graph {
             return newNode;
         }
 
-
         void addEdge(node* a, node* b){
+            if(this->weighted) __throw_invalid_argument("Falta indicar un peso para esta arista (grafo es ponderado)");
+            if(this->directed) directed_addEdge(a, b);
+            else nonDirected_addEdge(a, b);
+        }
+
+        void addEdge(node * a, node * b, E w){
+            if(!this->weighted) __throw_invalid_argument("Este grafo no tiene pesos en sus aristas");
+            if(this->directed) directed_addEdge(a, b, w);
+            else nonDirected_addEdge(a, b, w);
+        }
+
+        void nonDirected_addEdge(node* a, node* b){
             edge* edgeLTR = new edge(a, b);
             a->edges.emplace_back(edgeLTR);
             edge* edgeRTL = new edge(b, a);
@@ -76,7 +95,7 @@ class Graph {
             a->edges.emplace_back(newEdge);
         }
 
-        void addEdge(node* a, node* b, E w){
+        void nonDirected_AddEdge(node* a, node* b, E w){
             edge* edgeLTR = new edge(a, b, w);
             a->edges.emplace_back(edgeLTR);
             edge* edgeRTL = new edge(b, a, w);
@@ -100,6 +119,11 @@ class Graph {
         }
 
         void removeEdge(node * node1, node * node2){
+            if(this->directed) directed_removeEdge(node1, node2);
+            else nonDirected_removeEdge(node1, node2);
+        }
+
+        void nonDirected_removeEdge(node * node1, node * node2){
             node1->removeEdge(node2);
             node2->removeEdge(node1);
         }
@@ -108,12 +132,14 @@ class Graph {
             node1->removeEdge(node2);
         }
 
+
         bool findVertex(node * searched){
             if(find(nodes.begin(), nodes.end(), searched) != nodes.end())  return true;
             return false;
         }
 
-        bool findEdge(node * node1, node * node2){
+
+        bool findEdge(node * node1, node * node2){ //funciona para ambos
             if(!findVertex(node2)) throw ("No existe el nodo 2");
 
             ni = find(nodes.begin(), nodes.end(), node1);
@@ -123,6 +149,11 @@ class Graph {
                 }
                 return false;
             }else throw ("No existe el nodo 1");
+        }
+
+        int countEdges(){
+            if(this->directed) return directed_countEdges();
+            return nonDirected_countEdges();
         }
 
         int nonDirected_countEdges(){
@@ -141,6 +172,11 @@ class Graph {
             return count;
         }
 
+        bool isDense(float limit){
+            if (this->directed) return directed_isDense(limit);
+            return nonDirected_isDense(limit);
+        }
+
         bool nonDirected_isDense(float limit){
             if((2*nonDirected_countEdges())/(nodes.size()*(nodes.size()-1)) > limit){
                 return true;
@@ -155,6 +191,10 @@ class Graph {
             return false;
         }
 
+        bool isConnected(){
+            if(this->directed) return directed_isConnected();
+            return nonDirected_isConnected();
+        }
 
         bool nonDirected_isConnected(){
             if(nodes.size() == 0) throw ("Este grafo no tiene elementos");
@@ -162,7 +202,6 @@ class Graph {
             queue<node*> next;
             next.push(nodes[0]);
             node *current;
-
             while(!next.empty()){
                 current = next.front();
                 next.pop(); //this should delete the one at the front
@@ -174,14 +213,12 @@ class Graph {
                     }
                 }
             }
-
             if(visited.size() == nodes.size()) return true;
             return false;
         }
 
         bool directed_isConnected(){
             if(nodes.size() == 0) throw ("Este grafo no tiene elementos");
-
         }
 
 
@@ -215,27 +252,49 @@ class Graph {
         }*/
 
         void printTypes(){
-            //TODO
+
         }
+
 
         void directed_printDegree(node * n){
             int count = 0;
             for(ni = nodes.begin(); ni != nodes.end(); ni++){
                 for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ei++){
-                    if(*ei == n) count++;
+                    if((*ei)->nodes[1] == n) count++;
                 }
             }
-
             cout << "El vértice " << n->data << " tiene un grado de entrada de " << count << " y un grado de salida de " << n->edges.size() << endl;
+        }
+
+
+        void directed_printAllDegrees(){
+            map<node*, int> tally; //first es lo que salen, second es el que entra
+            for(ni = nodes.begin(); ni != nodes.end(); ni++){
+                if(tally.find(*ni) == tally.end()) tally[*ni] = 0;
+                for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ei++){
+                    if(tally.find((*ei)->nodes[1]) == tally.end()){
+                        tally[(*ei)->nodes[1]] = 1;
+                    }else{
+                        tally[(*ei)->nodes[1]] = tally[(*ei)->nodes[1]] +1;
+                    }
+                }
+            }
+            for(auto it = tally.begin(); it != tally.end(); it++){
+                cout << "El vértice " << it->first->data << " tiene un grado de salida de " << it->first->edges.size() << " y un grado de entrada de " << it->second <<endl;
+            }
         }
 
         void nonDirected_printDegree(node * n){
             cout << "El vértice " << n->data << " tiene un grado de " << n->edges.size() << endl;
         }
 
-        void printAllDegrees(){
-            for (ni = nodes.begin(); ni != nodes.end(); ni++){
-                nonDirected_printDegree(*ni);
+        void printDegrees(){
+            if(this->directed){
+                directed_printAllDegrees();
+            }else{
+                for (ni = nodes.begin(); ni != nodes.end(); ni++){
+                    nonDirected_printDegree(*ni);
+                }
             }
         }
 
