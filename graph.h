@@ -53,6 +53,16 @@ class Graph {
             return directed;
         }
 
+        void printInfo(){
+            cout << "Este grafo es ";
+            if(this->directed) cout << "dirigido y ";
+            else cout << "no dirigido y ";
+            if(this->weighted) cout << "ponderado. ";
+            else cout << "no poderado.";
+            cout << "Tiene " << nodes.size() << " nodos y " << countEdges() << " aristas.\n";
+            //also si es bipartito, conexo y demás
+        }
+
         node* addVertex(N val){
             node* newNode = new node(val);
             nodes.push_back(newNode);
@@ -204,8 +214,7 @@ class Graph {
             node *current;
             while(!next.empty()){
                 current = next.front();
-                next.pop(); //this should delete the one at the front
-
+                next.pop();
                 for(ei = current->edges.begin(); ei != current->edges.end(); ei++){
                     if(!(visited[(*ei)->nodes[1]])) {
                         next.push((*ei)->nodes[1]);
@@ -218,9 +227,59 @@ class Graph {
         }
 
         bool directed_isConnected(){
-            //TODO
+            unordered_map<node*, node*> set;
+            //set[nodes[0]] = nodes[0];
+
+            /*for(int i = 0; i < nodes.size(); i++){
+                set[nodes[i]] = nodes[i];
+            }*/
+
+            for(int i = 0; i < nodes.size(); i++){
+                for(ei = nodes[i]->edges.begin(); ei != nodes[i]->edges.end(); ei++){
+                    joinSet(set, nodes[i], (*ei)->nodes[1]);
+                }
+            }
+            node * lastRoot = set[nodes[0]];
+            for(auto it = set.begin(); it != set.end(); it++){
+                if(!areInSameSet(set, (*it).second, lastRoot)) return false;
+            }
+            return true;
         }
 
+        void joinSet(unordered_map<node*, node*> &set, node * a, node * b){
+            set[findRoot(set, a)] = set[findRoot(set, b)];
+        }
+
+        node* findRoot(unordered_map<node*, node*> &set, node * a){
+            while(a != set[a]){
+                set[a] = set[set[a]]; //actualizar el valor de padre al padre de su padre
+                a = set[a]; // a ahora también es el padre de su padre
+            }
+            return a;
+        }
+
+        bool areInSameSet(unordered_map<node*, node*> &set, node * a, node *b){
+            if(findRoot(set, a) == findRoot(set, b)) return true;
+            return false;
+        }
+
+/*
+        void joinSet(int set[], int a, int b){
+            set[find(set, a)] = find(set, b);
+        }
+
+        bool areInSameSet(int set[], int a, int b ){
+            if(find(set, a) == find(set, b)) return true;
+            return false;
+        }
+
+        int find(int set[], int a){
+            while(a != set[a]){
+                set[a] = set[set[a]]; //actualizar el valor de padre al padre de su padre
+                a = set[a]; // a también es el padre de su padre
+            }
+        }
+*/
 
         bool isStronglyConnected(){ //solo si es un grafo no dirigido
             //TODO
