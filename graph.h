@@ -4,7 +4,7 @@
 #include <vector>
 #include <list>
 #include <stack>
-#include <unordered_map>4
+#include <unordered_map>
 #include <map>
 #include <utility>
 #include <queue>
@@ -192,12 +192,12 @@ class Graph {
         }
 
         bool isConnected(){
+            if(nodes.size() == 0) throw ("Este grafo no tiene elementos");
             if(this->directed) return directed_isConnected();
             return nonDirected_isConnected();
         }
 
         bool nonDirected_isConnected(){
-            if(nodes.size() == 0) throw ("Este grafo no tiene elementos");
             unordered_map<node*, bool> visited;
             queue<node*> next;
             next.push(nodes[0]);
@@ -218,7 +218,7 @@ class Graph {
         }
 
         bool directed_isConnected(){
-            if(nodes.size() == 0) throw ("Este grafo no tiene elementos");
+            //TODO
         }
 
 
@@ -252,7 +252,47 @@ class Graph {
         }*/
 
         void printTypes(){
+            if(this->directed) directed_printTypes();
+            else nonDirected_printAllTypes();
+        }
 
+        void nonDirected_printAllTypes(){
+            for(ni = nodes.begin(); ni != nodes.end(); ni++){
+                nonDirected_printType(*ni);
+            }
+        }
+
+        void nonDirected_printType(node * n){
+            switch(n->edges.size()){
+                case 0:
+                    cout << "El vértice " << n->data << " es un vértice aislado\n";
+                    break;
+                case 1:
+                    cout << "El vértice " << n->data << " es un vértice hoja\n";
+                    break;
+                default:
+                    cout << "El vértice " << n->data << " no tiene ningún tipo en especial.\n";
+            }
+        }
+
+        void directed_printTypes(){
+            map<node*, int> tally;
+            for(ni = nodes.begin(); ni != nodes.end(); ni++){
+                if(tally.find(*ni) == tally.end()) tally[*ni] = 0;
+                for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ei++){
+                    if(tally.find((*ei)->nodes[1]) == tally.end()){
+                        tally[(*ei)->nodes[1]] = 1;
+                    }else{
+                        tally[(*ei)->nodes[1]] = tally[(*ei)->nodes[1]] +1;
+                    }
+                }
+            }
+            for(auto it = tally.begin(); it != tally.end(); it++){
+                if(it->first->edges.size() == 0 and it->second == 0) cout << "El vértice " << it->first->data << " es un vértice aislado<\n";
+                else if (it->first->edges.size() == 0)cout << "El vértice " << it->first->data << " es un hundido.\n";
+                else if (it->second == 0) cout << "El vértice " << it->first->data << " es una fuente.\n";
+                else cout << "El vértice " << it->first->data << " no tiene ningún tipo en especial\n";
+            }
         }
 
 

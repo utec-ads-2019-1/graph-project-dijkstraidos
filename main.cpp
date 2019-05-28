@@ -6,7 +6,8 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-    graph test(true);
+    //graph test(true);
+    graph test;
     vector<Node<graph>*> nodes;
     for(char c = 'A'; c<'E'; c++)
         nodes.push_back(test.addVertex(c));
@@ -33,6 +34,7 @@ int main(int argc, char *argv[]) {
     //cout << test.nonDirected_isConnected() << endl;
 
     test.printDegrees();
+    test.printTypes();
 
     cout << "Depth First Search:\n";
     test.DFS(nodes[0]);
