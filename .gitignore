@@ -38,3 +38,4 @@
 CMakeLists.txt
 /cmake-build-debug/*
 /.vscode/*
+.idea/workspace.xml
