@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
+#include <set>
 
 #include "node.h"
 #include "edge.h"
@@ -46,20 +47,20 @@ class Graph {
         bool directed = false;
         bool weighted = false;
 
-        void joinSet(unordered_map<node*, node*> &set, node * a, node * b){
-            set[findRoot(set, a)] = set[findRoot(set, b)];
+        void joinSet(unordered_map<node*, node*> &ds, node * a, node * b){
+            ds[findRoot(ds, a)] = ds[findRoot(ds, b)];
         }
 
-        node* findRoot(unordered_map<node*, node*> &set, node * a){
-            while(a != set[a]){
-                set[a] = set[set[a]]; //actualizar el valor de padre al padre de su padre
-                a = set[a]; // a ahora también es el padre de su padre
+        node* findRoot(unordered_map<node*, node*> &ds, node * a){
+            while(a != ds[a]){
+                ds[a] = ds[ds[a]]; //actualizar el valor de padre al padre de su padre
+                a = ds[a]; // a ahora también es el padre de su padre
             }
             return a;
         }
 
-        bool areInSameSet(unordered_map<node*, node*> &set, node * a, node *b){
-            if(findRoot(set, a) == findRoot(set, b)) return true;
+        bool areInSameSet(unordered_map<node*, node*> &ds, node * a, node *b){
+            if(findRoot(ds, a) == findRoot(ds, b)) return true;
             return false;
         }
 
@@ -277,7 +278,6 @@ class Graph {
             double x, y;
             N data;
             for(int i = 0; i<num_of_vertices; i++){
-                cout<<i<<endl;
                 file>>data>>x>>y;
                 nodes.push_back(new node(data, x, y));
             }
@@ -569,6 +569,39 @@ class Graph {
             }
         }
         return tally;
+    }
+
+    self kruskalMST(){
+        unordered_map<node*, int> node_to_index;
+        self MST; 
+        unordered_map<node*, node*> ds;
+        MST.weighted = true;
+
+        auto edgeCompare = [](edge* l, edge* r){return l->getData() < r->getData();};
+        multiset<edge*, decltype(edgeCompare)> edges(edgeCompare);
+        
+        for(int i = 0; i<nodes.size(); i++){
+            node_to_index[nodes[i]] = i;
+            MST.addVertex(nodes[i]);
+            ds[nodes[i]] = nodes[i];
+        }
+
+        for(node* vertex: nodes){
+            for(edge* edg : vertex->edges){
+                edges.insert(edg);
+            }
+        }
+        
+        for(edge* edg : edges){
+            if(!areInSameSet(ds, edg->nodes[0], edg->nodes[1])){
+                joinSet(ds, edg->nodes[0], edg->nodes[1]);
+                int idxA = node_to_index[edg->nodes[0]];
+                int idxB = node_to_index[edg->nodes[1]];
+                MST.addEdge(idxA, idxB, edg->getData());
+            }
+        }
+
+        return MST;
     }
 
     ~Graph(){

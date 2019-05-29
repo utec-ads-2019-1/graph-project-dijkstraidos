@@ -16,6 +16,9 @@ int main(int argc, char *argv[]) {
     test.BFS(0);
     cout<<endl<<"DFS:"<<endl;
     test.DFS(0);
+    cout<<endl<<"MST"<<endl;
+    graph MST = test.kruskalMST();
+    MST.BFS(0);
 
     if(!test.findEdge(0, 1)) cout << "No es encontró la arista entre A y B\n";
 

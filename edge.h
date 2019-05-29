@@ -27,6 +27,10 @@ class Edge {
             data = w;
         }
 
+        E getData(){ 
+           return data;
+        }
+
         /*~Edge(){
             delete this;
         }*/
