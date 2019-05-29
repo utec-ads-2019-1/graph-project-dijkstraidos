@@ -26,6 +26,10 @@ class Edge {
             nodes[1] = to;
             data = w;
         }
+
+        /*~Edge(){
+            delete this;
+        }*/
 };
 
 #endif

@@ -1,0 +1,94 @@
+//
+// Created by alejandro on 28/05/19.
+//
+
+//Estos son métodos que implementé pero que al final no sirven. Me dio pena borrarlos así que aquí están por mientras
+
+#include "graph.h"
+#include <iostream>
+
+using namespace std;
+
+typedef Graph<Traits> graph;
+
+//Aquí empieza eso lo de los types y demás
+template <typename Tr>
+void graph::printTypes(){
+    if(this->directed) directed_printTypes();
+    else nonDirected_printAllTypes();
+}
+
+void graph::nonDirected_printAllTypes(){
+    for(ni = nodes.begin(); ni != nodes.end(); ni++){
+        nonDirected_printType(*ni);
+    }
+}
+
+void graph::nonDirected_printType(node * n){
+    switch(n->edges.size()){
+        case 0:
+            cout << "El vértice " << n->data << " es un vértice aislado\n";
+            break;
+        case 1:
+            cout << "El vértice " << n->data << " es un vértice hoja\n";
+            break;
+        default:
+            cout << "El vértice " << n->data << " no tiene ningún tipo en especial.\n";
+    }
+}
+
+void graph::directed_printTypes(){
+    map<node*, int> tally;
+    for(ni = nodes.begin(); ni != nodes.end(); ni++){
+        if(tally.find(*ni) == tally.end()) tally[*ni] = 0;
+        for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ei++){
+            if(tally.find((*ei)->nodes[1]) == tally.end()){
+                tally[(*ei)->nodes[1]] = 1;
+            }else{
+                tally[(*ei)->nodes[1]] = tally[(*ei)->nodes[1]] +1;
+            }
+        }
+    }
+    for(auto it = tally.begin(); it != tally.end(); it++){
+        if(it->first->edges.size() == 0 and it->second == 0) cout << "El vértice " << it->first->data << " es un vértice aislado<\n";
+        else if (it->first->edges.size() == 0)cout << "El vértice " << it->first->data << " es un hundido.\n";
+        else if (it->second == 0) cout << "El vértice " << it->first->data << " es una fuente.\n";
+        else cout << "El vértice " << it->first->data << " no tiene ningún tipo en especial\n";
+    }
+}
+
+void graph::directed_printDegree(node * n) {
+    cout << "El vértice " << n->data << " tiene un grado de entrada de " << getInDegree(n) << " y un grado de salida de "
+         << n->edges.size() << endl;
+}
+
+void graph::directed_printAllDegrees(){
+    map<node*, int> tally; //first es lo que salen, second es el que entra
+    for(ni = nodes.begin(); ni != nodes.end(); ni++){
+        if(tally.find(*ni) == tally.end()) tally[*ni] = 0;
+        for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ei++){
+            if(tally.find((*ei)->nodes[1]) == tally.end()){
+                tally[(*ei)->nodes[1]] = 1;
+            }else{
+                tally[(*ei)->nodes[1]] = tally[(*ei)->nodes[1]] +1;
+            }
+        }
+    }
+    for(auto it = tally.begin(); it != tally.end(); it++){
+        cout << "El vértice " << it->first->data << " tiene un grado de salida de " << it->first->edges.size() << " y un grado de entrada de " << it->second <<endl;
+    }
+}
+
+void graph::nonDirected_printDegree(node * n){
+    cout << "El vértice " << n->data << " tiene un grado de " << n->edges.size() << endl;
+}
+
+void graph::printDegrees(){
+    if(this->directed){
+        directed_printAllDegrees();
+    }else{
+        for (ni = nodes.begin(); ni != nodes.end(); ni++){
+            nonDirected_printDegree(*ni);
+        }
+    }
+}

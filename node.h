@@ -30,6 +30,31 @@ class Node {
             this->x = node->x;
             this->y = node->y;
         }
+
+        bool removeEdge(Node* nToRemove) {
+            for(edge * e :edges){
+                if(e->nodes[1] == nToRemove){
+                    delete e;
+                    edges.remove(e);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        bool removeEdge(edge * edgeToRemove){
+            edges.remove(edgeToRemove);
+            return true;
+        }
+
+        ~Node(){
+            for(edge * e : edges){
+                delete e;
+            }
+
+            edges.clear();
+           //delete this;
+        }
 };
 
 #endif
