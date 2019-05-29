@@ -25,9 +25,10 @@ class Node {
         }
 
         bool removeEdge(Node* nToRemove) {
-            for(auto it = edges.begin(); it != edges.end(); ++it){
-                if((*it)->nodes[0] == nToRemove or (*it)->nodes[1] == nToRemove){
-                    edges.erase(it);
+            for(edge * e :edges){
+                if(e->nodes[1] == nToRemove){
+                    delete e;
+                    edges.remove(e);
                     return true;
                 }
             }
@@ -40,6 +41,10 @@ class Node {
         }
 
         ~Node(){
+            for(edge * e : edges){
+                delete e;
+            }
+
             edges.clear();
             delete this;
         }

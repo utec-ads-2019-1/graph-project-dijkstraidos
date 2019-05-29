@@ -20,9 +20,9 @@ int main(int argc, char *argv[]) {
     //test.addEdge(nodes[1], nodes[2]); //connect B and C
 
 
-    if(test.getType(nodes[1]) == hoja) cout << "Hoja\n";
+    //if(test.getType(nodes[1]) == hoja) cout << "Hoja\n";
 
-    //test.removeVertex(nodes[1]);
+    test.removeVertex(nodes[1]);
     /*test.removeEdge(nodes[0], nodes[1]);
 
     if(!test.findVertex(nodes[0])) cout << "No se encontró el vértice B\n";

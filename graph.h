@@ -90,7 +90,6 @@ private:
     }
 
     bool directed_removeVertex(node * nToRemove){
-        nToRemove->edges.clear();
         for(ni = nodes.begin(); ni != nodes.end(); ni++){
             for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ei++){
                 auto k = (*ei);
@@ -98,14 +97,18 @@ private:
                 break;
             }
         }
+        nodes.erase(ni);
+        delete nToRemove;
         return true;
     }
 
     bool nonDirected_removeVertex(node * nToRemove){
-        for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ++ei){
+        for (ei = nToRemove->edges.begin(); ei != nToRemove->edges.end(); ++ei) {
             (*ei)->nodes[1]->removeEdge(nToRemove);
         }
+        ni = find(nodes.begin(), nodes.end(), nToRemove);
         nodes.erase(ni);
+        delete nToRemove;
         return true;
     }
 
@@ -428,7 +431,7 @@ public:
         }
         return count;
     }
-    
+
     unordered_map<node*, pair<int, int>> * directed_getAllDegrees(){
         unordered_map<node*, pair<int, int>> tally; //first es lo que salen, second es el que entra
         for(ni = nodes.begin(); ni != nodes.end(); ni++){
@@ -497,6 +500,14 @@ public:
             }
         }
         return BFSTree;
+    }
+
+    ~Graph(){
+        for(node * it : nodes){
+            delete it;
+        }
+
+        nodes.clear();
     }
 
 
