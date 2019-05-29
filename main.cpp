@@ -6,7 +6,8 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-    graph test("graph.txt");
+    string file = "graph.txt";
+    graph test(file);
     cout<<"Done"<<endl;
 
     test.printInfo();
@@ -16,16 +17,13 @@ int main(int argc, char *argv[]) {
     cout<<endl<<"DFS:"<<endl;
     test.DFS(0);
 
-    /*test.addEdge(nodes[1], nodes[0]); //connect B and A
-    test.addEdge(nodes[2], nodes[0]); //connect C and A*/
-    //test.addEdge(nodes[1], nodes[2]); //connect B and C
+    cout<<endl;
+    test.removeEdge(0, 2);
+    test.removeEdge(0, 3);
 
+    if(test.getType(0) == hoja) cout << "Hoja\n";
 
-    //if(test.getType(nodes[1]) == hoja) cout << "Hoja\n";
-
-    /*test.removeEdge(nodes[0], nodes[1]);
-
-    if(!test.findVertex(nodes[0])) cout << "No se encontró el vértice B\n";
+    /*if(!test.findVertex(nodes[0])) cout << "No se encontró el vértice B\n";
 
     if(!test.findEdge(nodes[1], nodes[0])) cout << "No es encontró la arista entre A y B\n";*/
 

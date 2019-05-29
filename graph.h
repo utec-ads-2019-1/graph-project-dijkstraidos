@@ -11,6 +11,7 @@
 #include <fstream>
 #include <algorithm>
 #include <iostream>
+#include <string>
 
 #include "node.h"
 #include "edge.h"
@@ -82,7 +83,7 @@ class Graph {
             return true;
         }
 
-        bool nonDirected_AddEdge(node* a, node* b, E w){
+        bool nonDirected_addEdge(node* a, node* b, E w){
             edge* edgeLTR = new edge(a, b, w);
             a->edges.emplace_back(edgeLTR);
             edge* edgeRTL = new edge(b, a, w);
@@ -266,7 +267,7 @@ class Graph {
 
         Graph() = default;
 
-        Graph(string filename){
+        explicit Graph(string filename){
             ifstream file(filename);
             int num_of_vertices, num_of_edges;
 
@@ -295,7 +296,7 @@ class Graph {
             }
         }
 
-       Graph(bool directed) : directed(directed) {};
+       explicit Graph(bool directed) : directed(directed) {};
 
        Graph(bool directed, bool weighted) : directed(directed), weighted(weighted) {};
 
@@ -357,6 +358,10 @@ class Graph {
                 return nonDirected_removeVertex(nToRemove);
             }
             return false;
+        }
+
+        bool removeEdge(int a, int b){
+            return removeEdge(nodes[a], nodes[b]);
         }
 
         bool removeEdge(node * node1, node * node2){
@@ -435,6 +440,7 @@ class Graph {
             node_to_index[nodes[i]] = i; 
         }
     
+        vis[start] = true;
         while(!next.empty()){
             int current = next.front().first;
             int dad = next.front().second;
@@ -517,6 +523,10 @@ class Graph {
     bool isBipartite(){
         if(this->directed) return directed_isBipartite();
         return nonDirected_isBipartite();
+    }
+
+    vertex_Type getType(int n){
+        return getType(nodes[n]);
     }
 
     vertex_Type getType(node * n){
