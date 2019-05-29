@@ -101,6 +101,7 @@ class Graph {
 
         bool addEdge(node* a, node* b){
             if(this->weighted) __throw_invalid_argument("Falta indicar un peso para esta arista (grafo es ponderado)");
+            if (a == b) return false; //no se permiten lazos
             if(this->directed) return directed_addEdge(a, b);
             return nonDirected_addEdge(a, b);
         }
@@ -140,21 +141,34 @@ class Graph {
             b->edges.emplace_back(edgeRTL);
         }
 
+
         bool removeVertex(node * nToRemove){
             ni = find(nodes.begin(), nodes.end(), nToRemove);
-            if (ni != nodes.end()){ //si el nodo existe
-                for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ++ei){
-                    if((*ei)->nodes[0] == nToRemove){
-                        (*ei)->nodes[1]->removeEdge(nToRemove);
-                    }else{
-                        (*ei)->nodes[0]->removeEdge(nToRemove);
-                    }
-                }
-                nodes.erase(ni);
-                return true;
-            }else{
-                return false;
+            if (ni != nodes.end()){
+                if(this->directed) return directed_removeVertex(nToRemove);
+                return nonDirected_removeVertex(nToRemove);
             }
+            return false;
+        }
+
+        bool directed_removeVertex(node * nToRemove){
+            nToRemove->edges.clear();
+            for(ni = nodes.begin(); ni != nodes.end(); ni++){
+                for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ei++){
+                    auto k = (*ei);
+                    if((*ei)->nodes[1] == nToRemove) (*ni)->edges.erase(ei);
+                    break;
+                }
+            }
+            return true;
+        }
+
+        bool nonDirected_removeVertex(node * nToRemove){
+            for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ++ei){
+                (*ei)->nodes[1]->removeEdge(nToRemove);
+            }
+            nodes.erase(ni);
+            return true;
         }
 
         bool removeEdge(node * node1, node * node2){
@@ -273,7 +287,44 @@ class Graph {
 
         bool isStronglyConnected(){
             if(this->directed){
+                if(nodes.size() == 1) return true;
+                unordered_map<node*, bool> visited;
+                stack<node*> next;
+                next.push(nodes[0]);
 
+                while(!next.empty()){
+                    node* current = next.top();
+                    next.pop();
+
+                    visited[current] = true;
+
+                    for(edge* ep : current->edges){
+                        if(visited[ep->nodes[1]]) continue;
+                        next.push(ep->nodes[1]);
+                    }
+                }
+
+                if(visited.size() != nodes.size()) return false;
+                for(int i = 1; i < nodes.size(); i++){
+                    visited.clear();
+                    next.push(nodes[i]);
+                    bool found = false;
+                    while(!next.empty() and !found){
+                        node* current = next.top();
+                        next.pop();
+                        visited[current] = true;
+
+                        for(edge* ep : current->edges){
+                            if(ep->nodes[1] == nodes[0]) {
+                                found = true;
+                                break;
+                            }
+                            next.push(ep->nodes[1]);
+                        }
+                    }
+                    if(!found) return false;
+                }
+                return true;
             }
             if(this->nonDirected_isConnected()) return true;
             return false;
@@ -302,7 +353,7 @@ class Graph {
                 }
 
                 for(edge* ep : current->edges){
-                    if(visited.find(ep->nodes[1]) == visited.end()){
+                    if(visited.find(ep->nodes[1]) != visited.end()){
                         next.push(make_pair(ep->nodes[1], not color));
                     }else{
                         if(visited[ep->nodes[1]] == color) return false;
@@ -367,7 +418,7 @@ class Graph {
             }
             return tally;
         }
-        
+
         Self DFS(node* start){
             unordered_map<node*, bool> visited;
             Self DFSTree;

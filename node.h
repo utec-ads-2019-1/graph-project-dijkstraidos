@@ -34,6 +34,11 @@ class Node {
             return false;
         }
 
+        bool removeEdge(edge * edgeToRemove){
+            edges.remove(edgeToRemove);
+            return true;
+        }
+
         ~Node(){
             edges.clear();
             delete this;
