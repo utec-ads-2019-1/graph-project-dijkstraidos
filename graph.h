@@ -62,43 +62,6 @@ class Graph {
             return false;
         }
 
-
-    public:
-        static self* buildFromFile(string filename){
-            return new self(filename);
-        }
-
-        Graph() = default;
-
-        Graph(string filename){
-            ifstream file(filename);
-            int num_of_vertices, num_of_edges;
-
-            file>>num_of_vertices>>num_of_edges;
-            file>>directed>>weighted;
-
-            double x, y;
-            N data;
-            for(int i = 0; i<num_of_vertices; i++){
-                cout<<i<<endl;
-                file>>data>>x>>y;
-                nodes.push_back(new node(data, x, y));
-            }
-
-            int l, r;
-            E w;
-            for(int i = 0; i<num_of_edges; i++){
-                file>>l>>r;
-                if(weighted){
-                    file>>w;
-                    addEdge(l, r, w);
-                }
-                else{
-                    addEdge(l, r);
-                }
-            }
-        }
-
         bool nonDirected_addEdge(node* a, node* b){
             edge* edgeLTR = new edge(a, b);
             a->edges.emplace_back(edgeLTR);
@@ -296,8 +259,41 @@ class Graph {
             else return normal;
         }
 
-
     public:
+        static self* buildFromFile(string filename){
+            return new self(filename);
+        }
+
+        Graph() = default;
+
+        Graph(string filename){
+            ifstream file(filename);
+            int num_of_vertices, num_of_edges;
+
+            file>>num_of_vertices>>num_of_edges;
+            file>>directed>>weighted;
+
+            double x, y;
+            N data;
+            for(int i = 0; i<num_of_vertices; i++){
+                cout<<i<<endl;
+                file>>data>>x>>y;
+                nodes.push_back(new node(data, x, y));
+            }
+
+            int l, r;
+            E w;
+            for(int i = 0; i<num_of_edges; i++){
+                file>>l>>r;
+                if(weighted){
+                    file>>w;
+                    addEdge(l, r, w);
+                }
+                else{
+                    addEdge(l, r);
+                }
+            }
+        }
 
        Graph(bool directed) : directed(directed) {};
 
