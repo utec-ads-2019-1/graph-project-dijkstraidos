@@ -17,30 +17,25 @@ int main(int argc, char *argv[]) {
     cout<<endl<<"DFS:"<<endl;
     test.DFS(0);
 
+    if(!test.findEdge(0, 1)) cout << "No es encontró la arista entre A y B\n";
+
     cout<<endl;
     test.removeEdge(0, 2);
     test.removeEdge(0, 3);
 
     if(test.getType(0) == hoja) cout << "Hoja\n";
 
-    /*if(!test.findVertex(nodes[0])) cout << "No se encontró el vértice B\n";
+    test.removeVertex(0);
+    cout<<endl<<"BFS:"<<endl;
+    test.BFS(0);
 
-    if(!test.findEdge(nodes[1], nodes[0])) cout << "No es encontró la arista entre A y B\n";*/
-
-    /*if(test.isDense(0.7)){
+    if(test.isDense(0.7)){
         cout << "es denso" << endl;
     }else{
         cout << "no es denso" << endl;
     }
 
-    cout << test.countEdges() << endl;*/
+    cout << test.countEdges() << endl;
 
-    //cout << test.nonDirected_isConnected() << endl;
-
-    /*test.printInfo();
-    test.printDegrees();
-    test.printTypes();
-*/
-    //cout << test.isStronglyConnected() << endl;
     return EXIT_SUCCESS;
 }

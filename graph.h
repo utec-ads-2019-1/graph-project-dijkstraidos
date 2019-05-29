@@ -351,6 +351,10 @@ class Graph {
             return true;
         }
 
+        bool removeVertex(int n){
+            return removeVertex(nodes[n]);
+        }
+
         bool removeVertex(node * nToRemove){
             ni = find(nodes.begin(), nodes.end(), nToRemove);
             if (ni != nodes.end()){
@@ -375,8 +379,11 @@ class Graph {
             return nullptr;
         }
 
+        edge* findEdge(int a, int b){
+            return findEdge(nodes[a], nodes[b]);
+        }
 
-        edge * findEdge(node * node1, node * node2){ //funciona para ambos
+        edge * findEdge(node * node1, node * node2){
             if(!findVertex(node2)) throw ("No existe el nodo 2");
             ni = find(nodes.begin(), nodes.end(), node1);
             if(ni != nodes.end()){
