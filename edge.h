@@ -27,9 +27,9 @@ class Edge {
             data = w;
         }
 
-        ~Edge(){
+        /*~Edge(){
             delete this;
-        }
+        }*/
 };
 
 #endif

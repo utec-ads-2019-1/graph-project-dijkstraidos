@@ -37,3 +37,4 @@
 #ignore cmakelists.txt
 CMakeLists.txt
 /cmake-build-debug/*
+/.vscode/*

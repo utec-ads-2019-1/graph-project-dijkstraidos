@@ -46,7 +46,7 @@ class Node {
             }
 
             edges.clear();
-            delete this;
+           //delete this;
         }
 };
 

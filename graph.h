@@ -97,6 +97,7 @@ private:
                 break;
             }
         }
+        ni = find(nodes.begin(), nodes.end(), nToRemove);
         nodes.erase(ni);
         delete nToRemove;
         return true;
