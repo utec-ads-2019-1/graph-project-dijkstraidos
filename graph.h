@@ -174,24 +174,26 @@ class Graph {
                 Q.push_back(make_pair(n,x));
             }
             m[r]->key = 0;
-            min_priority_queue::buildMinHeap(Q);
-            vector<pair<node*, U*> > V = Q;
-            while(Q.size() > 0) {
-                U* u = min_priority_queue::heapExtractMin(Q);
+            min_priority_queue minQ(Q);
+            minQ.buildMinHeap();
+            min_priority_queue V(minQ);
+            while(minQ.size() > 0) {
+                U* u = minQ.heapExtractMin();
                 inQ[u->n] = false;
                 for(edge* e : u->n->edges) {
                     U* v = m[e->nodes[1]];
                     if(inQ[v->n] && weight(u->n,v->n) < v->key) {
                         v->parent = u;
-                        v->key = weight(u->n,v->n);
+                        V.heapDecreaseKey(v, weight(u->n,v->n));
                     }
                 }
             }
             self MST;
-            for(pair<node*,U*> p : V) {
+            std::vector<std::pair<node*,U*> >A =  V.getData();
+            for(pair<node*,U*> p : A) {
                 MST.addVertex(p.first);
             }
-            for(pair<node*,U*> p : V) {
+            for(pair<node*,U*> p : A) {
                 cout << "node " << p.first << " parent " << p.second->parent << endl;
                 MST.addEdge(p.first, p.second->parent ? p.second->parent->n : nullptr);
             }
