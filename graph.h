@@ -15,6 +15,8 @@
 
 using namespace std;
 
+enum vertex_Type {aislado, hoja, hundido, fuente, normal};
+
 class Traits {
 	public:
 		typedef char N;
@@ -41,6 +43,24 @@ class Graph {
         bool directed = false; //0 for not directed, 1 to directed
         bool weighted = false; //0 for not weighted, 1 to directed
 
+        void joinSet(unordered_map<node*, node*> &set, node * a, node * b){
+            set[findRoot(set, a)] = set[findRoot(set, b)];
+        }
+
+        node* findRoot(unordered_map<node*, node*> &set, node * a){
+            while(a != set[a]){
+                set[a] = set[set[a]]; //actualizar el valor de padre al padre de su padre
+                a = set[a]; // a ahora también es el padre de su padre
+            }
+            return a;
+        }
+
+        bool areInSameSet(unordered_map<node*, node*> &set, node * a, node *b){
+            if(findRoot(set, a) == findRoot(set, b)) return true;
+            return false;
+        }
+
+
     public:
 
         Graph() = default;
@@ -51,6 +71,10 @@ class Graph {
 
         bool isDirected(){
             return directed;
+        }
+
+        bool isWeighted() {
+            return weighted;
         }
 
         void printInfo(){
@@ -75,34 +99,38 @@ class Graph {
             return newNode;
         }
 
-        void addEdge(node* a, node* b){
+        bool addEdge(node* a, node* b){
             if(this->weighted) __throw_invalid_argument("Falta indicar un peso para esta arista (grafo es ponderado)");
-            if(this->directed) directed_addEdge(a, b);
-            else nonDirected_addEdge(a, b);
+            if(this->directed) return directed_addEdge(a, b);
+            return nonDirected_addEdge(a, b);
         }
 
-        void addEdge(node * a, node * b, E w){
+        bool addEdge(node * a, node * b, E w){
             if(!this->weighted) __throw_invalid_argument("Este grafo no tiene pesos en sus aristas");
             if(this->directed) directed_addEdge(a, b, w);
             else nonDirected_addEdge(a, b, w);
+            return true;
         }
 
-        void nonDirected_addEdge(node* a, node* b){
+        bool nonDirected_addEdge(node* a, node* b){
             edge* edgeLTR = new edge(a, b);
             a->edges.emplace_back(edgeLTR);
             edge* edgeRTL = new edge(b, a);
             b->edges.emplace_back(edgeRTL);
+            return true;
         }
 
 
-        void directed_addEdge(node* a, node* b){
+        bool directed_addEdge(node* a, node* b){
             edge* newEdge = new edge(a, b);
             a->edges.emplace_back(newEdge);
+            return true;
         }
 
-        void directed_addEdge(node* a, node* b, E w){
+        bool directed_addEdge(node* a, node* b, E w){
             edge* newEdge = new edge(a, b, w);
             a->edges.emplace_back(newEdge);
+            return true;
         }
 
         void nonDirected_AddEdge(node* a, node* b, E w){
@@ -112,7 +140,7 @@ class Graph {
             b->edges.emplace_back(edgeRTL);
         }
 
-        void removeVertex(node * nToRemove){
+        bool removeVertex(node * nToRemove){
             ni = find(nodes.begin(), nodes.end(), nToRemove);
             if (ni != nodes.end()){ //si el nodo existe
                 for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ++ei){
@@ -123,44 +151,47 @@ class Graph {
                     }
                 }
                 nodes.erase(ni);
+                return true;
             }else{
-                throw ("El vértice no existe");
+                return false;
             }
         }
 
-        void removeEdge(node * node1, node * node2){
-            if(this->directed) directed_removeEdge(node1, node2);
-            else nonDirected_removeEdge(node1, node2);
+        bool removeEdge(node * node1, node * node2){
+            if(this->directed) return directed_removeEdge(node1, node2);
+            return nonDirected_removeEdge(node1, node2);
         }
 
-        void nonDirected_removeEdge(node * node1, node * node2){
-            node1->removeEdge(node2);
-            node2->removeEdge(node1);
+        bool nonDirected_removeEdge(node * node1, node * node2){
+            return node1->removeEdge(node2) and node2->removeEdge(node1);
         }
 
-        void directed_removeEdge(node * node1, node * node2){
-            node1->removeEdge(node2);
-        }
-
-
-        bool findVertex(node * searched){
-            if(find(nodes.begin(), nodes.end(), searched) != nodes.end())  return true;
-            return false;
+        bool directed_removeEdge(node * node1, node * node2){
+            return node1->removeEdge(node2);
         }
 
 
-        bool findEdge(node * node1, node * node2){ //funciona para ambos
+        node * findVertex(node * searched){
+            auto it = find(nodes.begin(), nodes.end(), searched);
+            if(it != nodes.end()) return *it;
+            return nullptr;
+        }
+
+
+        edge * findEdge(node * node1, node * node2){ //funciona para ambos
             if(!findVertex(node2)) throw ("No existe el nodo 2");
-
             ni = find(nodes.begin(), nodes.end(), node1);
             if(ni != nodes.end()){
                 for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ++ei){
-                    if((*ei)->nodes[1] == node2) return true;
+                    if((*ei)->nodes[1] == node2) return *ei;
                 }
-                return false;
+                return nullptr;
             }else throw ("No existe el nodo 1");
         }
 
+
+        //Esta parte puede ser optimizada. Lo dejo a su discreción si crear una función que cuente la cantidad absoluta
+        // y de ahí llamarla y dividirla entre dos o hacer una cosa completamente diferente
         int countEdges(){
             if(this->directed) return directed_countEdges();
             return nonDirected_countEdges();
@@ -228,12 +259,6 @@ class Graph {
 
         bool directed_isConnected(){
             unordered_map<node*, node*> set;
-            //set[nodes[0]] = nodes[0];
-
-            /*for(int i = 0; i < nodes.size(); i++){
-                set[nodes[i]] = nodes[i];
-            }*/
-
             for(int i = 0; i < nodes.size(); i++){
                 for(ei = nodes[i]->edges.begin(); ei != nodes[i]->edges.end(); ei++){
                     joinSet(set, nodes[i], (*ei)->nodes[1]);
@@ -246,130 +271,92 @@ class Graph {
             return true;
         }
 
-        void joinSet(unordered_map<node*, node*> &set, node * a, node * b){
-            set[findRoot(set, a)] = set[findRoot(set, b)];
-        }
+        bool isStronglyConnected(){
+            if(this->directed){
 
-        node* findRoot(unordered_map<node*, node*> &set, node * a){
-            while(a != set[a]){
-                set[a] = set[set[a]]; //actualizar el valor de padre al padre de su padre
-                a = set[a]; // a ahora también es el padre de su padre
             }
-            return a;
-        }
-
-        bool areInSameSet(unordered_map<node*, node*> &set, node * a, node *b){
-            if(findRoot(set, a) == findRoot(set, b)) return true;
+            if(this->nonDirected_isConnected()) return true;
             return false;
         }
 
-/*
-        void joinSet(int set[], int a, int b){
-            set[find(set, a)] = find(set, b);
+
+        bool isBipartite(){
+            if(this->directed) return false;
+            return nonDirected_isBipartite();
         }
 
-        bool areInSameSet(int set[], int a, int b ){
-            if(find(set, a) == find(set, b)) return true;
-            return false;
-        }
+        bool nonDirected_isBipartite(){
+            unordered_map<node*, bool> visited;
+            stack<pair<node*, bool>> next;
+            next.push(make_pair(nodes[0], true));
 
-        int find(int set[], int a){
-            while(a != set[a]){
-                set[a] = set[set[a]]; //actualizar el valor de padre al padre de su padre
-                a = set[a]; // a también es el padre de su padre
-            }
-        }
-*/
+            while(!next.empty()){
+                node* current = next.top().first;
+                bool color = next.top().second;
+                next.pop();
 
-        bool isStronglyConnected(){ //solo si es un grafo no dirigido
-            //TODO
-        }
-
-        /*bool isBipartite(){
-            unordered_map<node*, bool> leftNodes;
-            unordered_map<node*, bool> rightNodes;
-            queue<node*> next;
-
-            unordered_map<node*, bool> * currentSide;
-            unordered_map<node*, bool> * otherSide;
-
-            currentSide = &leftNodes;
-            otherSide = &rightNodes;
-
-            for(ni = nodes.begin(); ni != nodes.end(); ni++){
-                if(leftNodes[*ni] or rightNodes[*ni]) continue;
-
-                (*currentSide)[*ni] = true;
-                for(ei = (*ni).edges.begin(); ei !=(*ni).edges.begin(); ei++){
-                    if((*currentSide)[(*ei)[1]]) return false;
-                    otherSide[(*ei)[1]] = true;
+                if(visited.find(current) == visited.end()){
+                    visited[current] = color;
+                }else{
+                    if(visited[current] == color) return false;
                 }
 
+                for(edge* ep : current->edges){
+                    if(visited.find(ep->nodes[1]) == visited.end()){
+                        next.push(make_pair(ep->nodes[1], not color));
+                    }else{
+                        if(visited[ep->nodes[1]] == color) return false;
+                    }
+                }
             }
 
             return true;
-        }*/
-
-        void printTypes(){
-            if(this->directed) directed_printTypes();
-            else nonDirected_printAllTypes();
         }
 
-        void nonDirected_printAllTypes(){
-            for(ni = nodes.begin(); ni != nodes.end(); ni++){
-                nonDirected_printType(*ni);
-            }
+        vertex_Type getType(node * n){
+            if(this->directed) return directed_getType(n);
+            return nonDirected_getType(n);
         }
 
-        void nonDirected_printType(node * n){
-            switch(n->edges.size()){
+        vertex_Type nonDirected_getType(node * n){
+            switch(n->edges.size()) {
                 case 0:
-                    cout << "El vértice " << n->data << " es un vértice aislado\n";
-                    break;
+                    return aislado;
                 case 1:
-                    cout << "El vértice " << n->data << " es un vértice hoja\n";
-                    break;
+                    return hoja;
                 default:
-                    cout << "El vértice " << n->data << " no tiene ningún tipo en especial.\n";
+                    return normal;
             }
         }
 
-        void directed_printTypes(){
-            map<node*, int> tally;
-            for(ni = nodes.begin(); ni != nodes.end(); ni++){
-                if(tally.find(*ni) == tally.end()) tally[*ni] = 0;
-                for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ei++){
-                    if(tally.find((*ei)->nodes[1]) == tally.end()){
-                        tally[(*ei)->nodes[1]] = 1;
-                    }else{
-                        tally[(*ei)->nodes[1]] = tally[(*ei)->nodes[1]] +1;
-                    }
-                }
-            }
-            for(auto it = tally.begin(); it != tally.end(); it++){
-                if(it->first->edges.size() == 0 and it->second == 0) cout << "El vértice " << it->first->data << " es un vértice aislado<\n";
-                else if (it->first->edges.size() == 0)cout << "El vértice " << it->first->data << " es un hundido.\n";
-                else if (it->second == 0) cout << "El vértice " << it->first->data << " es una fuente.\n";
-                else cout << "El vértice " << it->first->data << " no tiene ningún tipo en especial\n";
-            }
+        vertex_Type directed_getType(node * n){
+            int inDegree = getInDegree(n);
+            if(getOutDegree(n) == 0 and inDegree == 0) return aislado;
+            else if (getOutDegree(n) == 0) return hundido;
+            else if (inDegree == 0) return fuente;
+            else return normal;
         }
 
+        //quizás esto estaŕia mejor en la clase node misma
+        int getOutDegree(node * n){
+            return n->edges.size();
+        }
 
-        void directed_printDegree(node * n){
+        int getInDegree(node * n){
             int count = 0;
-            for(ni = nodes.begin(); ni != nodes.end(); ni++){
-                for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ei++){
-                    if((*ei)->nodes[1] == n) count++;
+            for (ni = nodes.begin(); ni != nodes.end(); ni++) {
+                for (ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ei++) {
+                    if ((*ei)->nodes[1] == n) count++;
                 }
             }
-            cout << "El vértice " << n->data << " tiene un grado de entrada de " << count << " y un grado de salida de " << n->edges.size() << endl;
+            return count;
         }
 
 
-        void directed_printAllDegrees(){
-            map<node*, int> tally; //first es lo que salen, second es el que entra
+        unordered_map<node*, pair<int, int>> * directed_getAllDegrees(){
+            unordered_map<node*, pair<int, int>> tally; //first es lo que salen, second es el que entra
             for(ni = nodes.begin(); ni != nodes.end(); ni++){
-                if(tally.find(*ni) == tally.end()) tally[*ni] = 0;
+                if(tally.find(*ni) == tally.end()) tally[*ni] = make_pair(getOutDegree(*ni), 0);
                 for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ei++){
                     if(tally.find((*ei)->nodes[1]) == tally.end()){
                         tally[(*ei)->nodes[1]] = 1;
@@ -378,26 +365,9 @@ class Graph {
                     }
                 }
             }
-            for(auto it = tally.begin(); it != tally.end(); it++){
-                cout << "El vértice " << it->first->data << " tiene un grado de salida de " << it->first->edges.size() << " y un grado de entrada de " << it->second <<endl;
-            }
+            return tally;
         }
-
-        void nonDirected_printDegree(node * n){
-            cout << "El vértice " << n->data << " tiene un grado de " << n->edges.size() << endl;
-        }
-
-        void printDegrees(){
-            if(this->directed){
-                directed_printAllDegrees();
-            }else{
-                for (ni = nodes.begin(); ni != nodes.end(); ni++){
-                    nonDirected_printDegree(*ni);
-                }
-            }
-        }
-
-
+        
         Self DFS(node* start){
             unordered_map<node*, bool> visited;
             Self DFSTree;
@@ -455,21 +425,19 @@ class Graph {
             return BFSTree;
         }
 
-        /*self prim_MST(node* start){
-            class Comp{
-                public:
-                    bool operator()(edge* a, edge* b){
-                        return a->data < b->data;
-                    }
-            };
 
-            priority_queue<edge*, vector<edge*>, Comp> next(Comp);
-            next.push(start);
+        // aquí están declaradas todas las funciones print que hice antes que me dijesen que no era lo que pedía :/
 
-            self MST;
+        /*void printTypes();
+        void nonDirected_printAllTypes();
+        void directed_printAllTypes();
+        void nonDirected_printType(node * n);
+        void directed_printTypes();
+        void directed_printDegree(node * n);
+        void directed_printAllDegrees();
+        void nonDirected_printDegree(node * n);
+        void printDegrees();*/
 
-            while(*/
-            
 };
 
 typedef Graph<Traits> graph;

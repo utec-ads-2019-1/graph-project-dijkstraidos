@@ -12,9 +12,10 @@ int main(int argc, char *argv[]) {
     for(char c = 'A'; c<'E'; c++)
         nodes.push_back(test.addVertex(c));
 
-    test.addEdge(nodes[0], nodes[1]); //connect A and B
+    cout << test.addEdge(nodes[0], nodes[1]); //connect A and B
     test.addEdge(nodes[0], nodes[2]); //connect A and C
     test.addEdge(nodes[0], nodes[3]); //connect A and D
+    test.addEdge(nodes[1], nodes[2]); //connect B and C
 
     //test.removeVertex(nodes[1]);
     /*test.removeEdge(nodes[0], nodes[1]);
@@ -33,11 +34,12 @@ int main(int argc, char *argv[]) {
 
     //cout << test.nonDirected_isConnected() << endl;
 
-    test.printInfo();
+    /*test.printInfo();
     test.printDegrees();
     test.printTypes();
-
-    if(test.isConnected()) cout << "fjljsfdkjflskdflkjsf" << endl;
+*/
+    /*if(test.isBipartite()) cout << "Es bipartito" << endl;
+    else cout << "No es bipartito" << endl;*/
 
     cout << "Depth First Search:\n";
     test.DFS(nodes[0]);

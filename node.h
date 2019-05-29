@@ -24,13 +24,14 @@ class Node {
             this->data = node->data;
         }
 
-        void removeEdge(Node* nToRemove) {
+        bool removeEdge(Node* nToRemove) {
             for(auto it = edges.begin(); it != edges.end(); ++it){
                 if((*it)->nodes[0] == nToRemove or (*it)->nodes[1] == nToRemove){
                     edges.erase(it);
-                    break;
+                    return true;
                 }
             }
+            return false;
         }
 
         ~Node(){
