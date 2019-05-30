@@ -16,18 +16,18 @@ int main(int argc, char *argv[]) {
     test.BFS(0);
     cout<<endl<<"DFS:"<<endl;
     test.DFS(0);
+
+
+
     cout<<endl<<"KMST"<<endl;
     graph KMST = test.kruskalMST();
     KMST.BFS(0);
-
-
-
+    cout<<KMST.graphWeight()<<endl;
+    
     cout<<endl<<"PMST"<<endl;
     graph PMST = test.MST_Prim(0);
-
-
-    cout<<endl<<endl<<"BFSMST"<<endl;
     PMST.BFS(0);
+    cout<<PMST.graphWeight()<<endl;
 
     if(!test.findEdge(0, 1)) cout << "No es encontró la arista entre A y B\n";
 

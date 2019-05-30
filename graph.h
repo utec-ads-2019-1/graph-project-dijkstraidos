@@ -586,11 +586,23 @@ class Graph {
             return tally;
         }
 
+        E graphWeight(){
+            E totalWeight = 0;
+            for(node* nd : nodes){
+                for(edge* edg : nd->edges){
+                    totalWeight += edg->getData();
+                }
+            }
+            if(!directed) totalWeight /= 2;
+            return totalWeight;
+        }
+
         self kruskalMST(){
             unordered_map<node*, int> node_to_index;
             self MST; 
             unordered_map<node*, node*> ds;
             MST.weighted = true;
+            MST.directed = false;
 
             auto edgeCompare = [](edge* l, edge* r){return l->getData() < r->getData();};
             multiset<edge*, decltype(edgeCompare)> edges(edgeCompare);
@@ -619,10 +631,6 @@ class Graph {
             return MST;
         }
 
-        self MST_Prim(int n){
-            return MST_Prim(nodes[n]);
-        }
-
         E weight(node* n1, node* n2) {
             // TODO: Handle the case when it's directed
             if(weights.count({n1,n2}) == 0) {
@@ -634,24 +642,25 @@ class Graph {
             return weights[{n1,n2}];
         }
 
-        self MST_Prim(node* start){
+        self MST_Prim(int start){
             unordered_map<node*, int> node_to_index;
             vector<bool> vis(nodes.size(), false);
             vector<int> parent(nodes.size(), -1);
             vector<E> dist(nodes.size(), -1);
 
-            priority_queue<pair<E, int>> pq;
+            priority_queue<pair<E, int>, vector<pair<E, int>>, greater<pair<E, int>>> pq;
 
             self MST;
             MST.weighted = true;
+            MST.directed = false;
 
             for(int i = 0; i<nodes.size(); i++){
                 MST.addVertex(nodes[i]);
                 node_to_index[nodes[i]] = i;
             }
 
-            pq.push(make_pair(0, 0));
-            dist[0] = 0;
+            pq.push(make_pair(0, start));
+            dist[start] = 0;
             while(!pq.empty()){
                 int curr = pq.top().second;
                 pq.pop();
