@@ -348,6 +348,7 @@ class Graph {
         }
 
         bool addEdge(node* a, node* b){
+            if(a == nullptr || b == nullptr) return false;
             if(this->weighted) __throw_invalid_argument("Falta indicar un peso para esta arista (grafo es ponderado)");
             if (a == b) return false; //no se permiten lazos
             if(this->directed) return directed_addEdge(a, b);
@@ -619,7 +620,7 @@ class Graph {
         }
 
         self MST_Prim(int n){
-            return MST_Prim(n);
+            return MST_Prim(nodes[n]);
         }
 
         E weight(node* n1, node* n2) {
@@ -665,7 +666,6 @@ class Graph {
                 MST.addVertex(p.first);
             }
             for(pair<node*,U*> p : A) {
-                cout << "node " << p.first << " parent " << p.second->parent << endl;
                 MST.addEdge(p.first, p.second->parent ? p.second->parent->n : nullptr);
             }
             return MST;
