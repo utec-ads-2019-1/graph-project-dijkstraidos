@@ -12,6 +12,8 @@ int main(int argc, char *argv[]) {
 
     test.printInfo();
 
+    cout<<test.findNode('Z')<<endl;
+
     cout<<endl<<"BFS:"<<endl;
     test.BFS(0);
     cout<<endl<<"DFS:"<<endl;

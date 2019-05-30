@@ -343,6 +343,12 @@ class Graph {
             return newNode;
         }
 
+        bool findNode(N val){
+            for(node* nd : nodes)
+                if(nd->data == val) return true;
+            return false;
+        }
+
         bool addEdge(int a, int b){
             return addEdge(nodes[a], nodes[b]);
         }
