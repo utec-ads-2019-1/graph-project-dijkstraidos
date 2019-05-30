@@ -1,5 +1,7 @@
 #ifndef NODE_H
 #define NODE_H
+#include <string>
+#include <iostream>
 
 template <typename G>
 class Node {
@@ -54,6 +56,17 @@ class Node {
 
             edges.clear();
            //delete this;
+        }
+
+        N getData() {
+            return data;
+        }
+
+        edge* edgeWith(Node* node) {
+            for(edge* e : edges) {
+                if(e->nodes[1] == node) return e;
+            }
+            std::cout << std::string("There is no such edge.");
         }
 };
 
