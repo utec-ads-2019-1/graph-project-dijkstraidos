@@ -80,12 +80,13 @@ class MinPriorityQueue{
     }
 
     std::vector<std::pair<node*,U*> > buildMinHeap() {
-        int l = A.size()/2 - 1;
+        int l = A.size()/2;
         for(int i = l; i >= 0; --i) (*this).minHeapify(i);
         int i = 0;
         for(std::pair<node*,U*> p : A) {
             positions[p.first] = i++;
         }
+        std::cout << "heap size " << A.size() << std::endl;
         return A;
     }
 

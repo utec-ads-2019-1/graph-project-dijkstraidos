@@ -635,6 +635,7 @@ class Graph {
         }
 
         self MST_Prim(node* r) {
+            cout << "root " << r->data << endl;
             vector<pair<node*, U*> > Q;
             map<node*,bool> inQ;
             m.clear();
@@ -645,6 +646,7 @@ class Graph {
                 Q.push_back(make_pair(n,x));
             }
             m[r]->key = 0;
+            std::cout << "vector size " << Q.size() << endl;
             min_priority_queue minQ(Q);
             minQ.buildMinHeap();
             min_priority_queue V(minQ);
@@ -662,10 +664,13 @@ class Graph {
             }
             self MST;
             std::vector<std::pair<node*,U*> >A =  V.getData();
+            cout << "after operations " << A.size()<< endl;
             for(pair<node*,U*> p : A) {
-                MST.addVertex(p.first);
+                MST.addVertex(p.first); cout << "adding vertex " << p.first->data << endl;
             }
             for(pair<node*,U*> p : A) {
+                char d = p.second->parent ? p.second->parent->n->data : '0';
+                cout << "adding edge from " << p.first->data << " to edge " << d << endl;
                 MST.addEdge(p.first, p.second->parent ? p.second->parent->n : nullptr);
             }
             return MST;
