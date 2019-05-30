@@ -79,6 +79,7 @@ class Graph {
         }
 
         bool nonDirected_addEdge(node* a, node* b){
+            if(findEdge(a, b)) throw "Esta lista ya existe";
             edge* edgeLTR = new edge(a, b);
             a->edges.emplace_back(edgeLTR);
             edge* edgeRTL = new edge(b, a);
@@ -88,17 +89,20 @@ class Graph {
 
 
         bool directed_addEdge(node* a, node* b){
+            if(findEdge(a, b)) throw "Esta lista ya existe";
             edge* newEdge = new edge(a, b);
             a->edges.emplace_back(newEdge);
             return true;
         }
 
         bool directed_addEdge(node* a, node* b, E w){ edge* newEdge = new edge(a, b, w);
+            if(findEdge(a, b)) throw "Esta lista ya existe";
             a->edges.emplace_back(newEdge);
             return true;
         }
 
         bool nonDirected_addEdge(node* a, node* b, E w){
+            if(findEdge(a, b)) throw "Esta lista ya existe";
             edge* edgeLTR = new edge(a, b, w);
             a->edges.emplace_back(edgeLTR);
             edge* edgeRTL = new edge(b, a, w);
@@ -107,11 +111,14 @@ class Graph {
         }
 
         bool directed_removeVertex(node * nToRemove){
+            if(!findVertex(nToRemove)) return false;
             for(ni = nodes.begin(); ni != nodes.end(); ni++){
                 for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ei++){
                     auto k = (*ei);
-                    if((*ei)->nodes[1] == nToRemove) (*ni)->edges.erase(ei);
-                    break;
+                    if((*ei)->nodes[1] == nToRemove){
+                        (*ni)->edges.erase(ei);
+                        break;
+                    }
                 }
             }
             ni = find(nodes.begin(), nodes.end(), nToRemove);
@@ -121,6 +128,7 @@ class Graph {
         }
 
         bool nonDirected_removeVertex(node * nToRemove){
+            if(!findVertex(nToRemove)) return false;
             for (ei = nToRemove->edges.begin(); ei != nToRemove->edges.end(); ++ei) {
                 (*ei)->nodes[1]->removeEdge(nToRemove);
             }
@@ -257,6 +265,7 @@ class Graph {
 
 
         vertex_Type nonDirected_getType(node * n){
+            if(!findVertex(n)) throw "Este vertice no esta en el grafo";
             switch(n->edges.size()) {
                 case 0:
                     return aislado;
@@ -268,6 +277,7 @@ class Graph {
         }
 
         vertex_Type directed_getType(node * n){
+            if(!findVertex(n)) throw "Este vertice no esta en el grafo";
             int inDegree = getInDegree(n);
             if(getOutDegree(n) == 0 and inDegree == 0) return aislado;
             else if (getOutDegree(n) == 0) return hundido;
@@ -332,6 +342,7 @@ class Graph {
         }
 
         node* addVertex(N val){
+            if(findNode(val)) throw "Este valor ya existe";
             node* newNode = new node(val);
             nodes.push_back(newNode);
             return newNode;
@@ -504,6 +515,7 @@ class Graph {
 
 
         bool isStronglyConnected(){
+            if(nodes.size() == 0) throw ("Este grafo no tiene elementos");
             if(this->directed){
                 if(nodes.size() == 1) return true;
                 unordered_map<node*, bool> visited;
