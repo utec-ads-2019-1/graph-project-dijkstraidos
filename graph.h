@@ -634,7 +634,50 @@ class Graph {
             return weights[{n1,n2}];
         }
 
-        self MST_Prim(node* r) {
+        self MST_Prim(node* start){
+            unordered_map<node*, int> node_to_index;
+            vector<bool> vis(nodes.size(), false);
+            vector<int> parent(nodes.size(), -1);
+            vector<E> dist(nodes.size(), -1);
+
+            priority_queue<pair<E, int>> pq;
+
+            self MST;
+            MST.weighted = true;
+
+            for(int i = 0; i<nodes.size(); i++){
+                MST.addVertex(nodes[i]);
+                node_to_index[nodes[i]] = i;
+            }
+
+            pq.push(make_pair(0, 0));
+            dist[0] = 0;
+            while(!pq.empty()){
+                int curr = pq.top().second;
+                pq.pop();
+                if(vis[curr]) continue;
+                vis[curr] = true;
+                if(parent[curr] >= 0){
+                    MST.addEdge(parent[curr], curr, dist[curr]);
+                }
+                for(edge* edg : nodes[curr]->edges){
+                    int nd = node_to_index[edg->nodes[1]];
+                    int w = edg->getData();
+                    if(vis[nd]) continue;
+                    if(w < dist[nd] || dist[nd] == -1){
+                        dist[nd] = w;
+                        parent[nd] = curr;
+                        pq.push(make_pair(w, nd));
+                    }
+                }
+            }
+
+            return MST;
+        }
+
+            
+
+        /*`self MST_Prim(node* r) {
             cout << "root " << r->data << endl;
             vector<pair<node*, U*> > Q;
             map<node*,bool> inQ;
@@ -674,7 +717,7 @@ class Graph {
                 MST.addEdge(p.first, p.second->parent ? p.second->parent->n : nullptr);
             }
             return MST;
-        }
+        }*/
 
         ~Graph(){
             for(node * it : nodes){

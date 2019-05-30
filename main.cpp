@@ -19,8 +19,14 @@ int main(int argc, char *argv[]) {
     cout<<endl<<"KMST"<<endl;
     graph KMST = test.kruskalMST();
     KMST.BFS(0);
+
+
+
     cout<<endl<<"PMST"<<endl;
     graph PMST = test.MST_Prim(0);
+
+
+    cout<<endl<<endl<<"BFSMST"<<endl;
     PMST.BFS(0);
 
     if(!test.findEdge(0, 1)) cout << "No es encontró la arista entre A y B\n";
