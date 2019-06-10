@@ -9,8 +9,6 @@ int main(int argc, char *argv[]) {
     cin>>file;
     graph test(file);
     test.printInfo();
-    cout<<test.findEdge('a','c');
-    test.addEdge('a', 'c', 3);
-    cout<<test.findEdge('a','c');
+    cout<<test.strongly_connected();
     return EXIT_SUCCESS;
 }

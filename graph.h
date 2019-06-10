@@ -95,6 +95,8 @@ class Graph {
         self kruskalMST();
         self primMST(N);
 
+        unordered_map<N, unordered_map<N,E>> FWSP();
+
         ~Graph(){
             for(auto it : nodes){
                 delete it.second;
@@ -299,18 +301,16 @@ bool Graph<Tr>::isDense(float limit){
 
 template <typename Tr>
 Graph<Tr> Graph<Tr>::transpose(){
-    unordered_map<node*, N> node_to_index;
     self TG(directed, weighted);
 
     for(auto it : nodes){
         TG.addVertex(it.second);
-        node_to_index[it.second] = it.first;
     }
 
     for(auto it : nodes){
         N start = it.first;
         for(edge * edg : it.second->edges){
-            N finish = node_to_index[edg->nodes[1]];
+            N finish = edg->nodes[1]->data;
             TG.addEdge(finish, start, edg->getData());
         }
     }
@@ -479,14 +479,9 @@ bool Graph<Tr>::bipartite(){
 
 template <typename Tr>
 Graph<Tr> Graph<Tr>::BFS(N start){
-    unordered_map<node*, N> node_to_index;
     unordered_map<N, N> parent;
     unordered_map<N, bool> vis;
     queue<N> next;
-
-    for(auto it : nodes){
-        node_to_index[it.second] = it.first;
-    }
 
     self BFSTree(directed, weighted);
 
@@ -508,7 +503,7 @@ Graph<Tr> Graph<Tr>::BFS(N start){
         }
 
         for(edge* edg : nodes[current]->edges){
-            N adjNode = node_to_index[edg->nodes[1]];
+            N adjNode = edg->nodes[1]->data;
             if(vis[adjNode]) continue;
             vis[adjNode] = true;
             parent[adjNode] = current;
@@ -521,14 +516,9 @@ Graph<Tr> Graph<Tr>::BFS(N start){
 
 template <typename Tr>
 Graph<Tr> Graph<Tr>::DFS(N start){
-    unordered_map<node*, N> node_to_index;
     unordered_map<N, N> parent;
     unordered_map<N, bool> vis;
     stack<N> next;
-
-    for(auto it : nodes){
-        node_to_index[it.second] = it.first;
-    }
 
     self DFSTree(directed, weighted);
 
@@ -551,7 +541,7 @@ Graph<Tr> Graph<Tr>::DFS(N start){
         }
 
         for(edge* edg : nodes[current]->edges){
-            N adjNode = node_to_index[edg->nodes[1]];
+            N adjNode = edg->nodes[1]->data;
             if(vis[adjNode]) continue;
             parent[adjNode] = current;
             next.push(adjNode);
@@ -565,7 +555,6 @@ Graph<Tr> Graph<Tr>::DFS(N start){
 
 template <typename Tr>
 Graph<Tr> Graph<Tr>::kruskalMST(){
-    unordered_map<node*, N> node_to_index;
     self MST; 
     disjoint_set<N> ds;
     MST.weighted = true;
@@ -575,7 +564,6 @@ Graph<Tr> Graph<Tr>::kruskalMST(){
     multiset<edge*, decltype(edgeCompare)> edges(edgeCompare);
     
     for(auto it : nodes){
-        node_to_index[it.second] = it.first;
         MST.addVertex(it.second);
         ds[it.first] = it.first;
         for(edge* edg : it.second->edges){
@@ -584,8 +572,8 @@ Graph<Tr> Graph<Tr>::kruskalMST(){
     }
 
     for(edge* edg : edges){
-        N nd1 = node_to_index[edg->nodes[0]];
-        N nd2 = node_to_index[edg->nodes[1]];
+        N nd1 = edg->nodes[0]->data;
+        N nd2 = edg->nodes[1]->data;
         if(!ds.areInSameSet(nd1, nd2)){
             ds.joinSet(nd1, nd2);
             MST.addEdge(nd1, nd2, edg->getData());
@@ -597,7 +585,6 @@ Graph<Tr> Graph<Tr>::kruskalMST(){
 
 template <typename Tr>
 Graph<Tr> Graph<Tr>::primMST(N start){
-    unordered_map<node*, N> node_to_index;
     unordered_map<N, N> parent;
     unordered_map<N, bool> vis;
     unordered_map<N, E> weight;
@@ -607,10 +594,6 @@ Graph<Tr> Graph<Tr>::primMST(N start){
     self MST;
     MST.weighted = true;
     MST.directed = false;
-
-    for(auto it : nodes){
-        node_to_index[it.second] = it.first;
-    }
 
     pq.push(make_pair(0, start));
     parent[start] = start;
@@ -630,7 +613,7 @@ Graph<Tr> Graph<Tr>::primMST(N start){
         }
 
         for(edge* edg : nodes[curr]->edges){
-            int nd = node_to_index[edg->nodes[1]];
+            int nd = edg->nodes[1]->data;
             int w = edg->getData();
             if(vis[nd]) continue;
             if(weight.find(nd) == weight.end() || weight[nd] < w){
@@ -642,6 +625,43 @@ Graph<Tr> Graph<Tr>::primMST(N start){
     }
 
     return MST;
+}
+
+template <typename Tr>
+unordered_map<typename Graph<Tr>::N, unordered_map<typename Graph<Tr>::N, typename Graph<Tr>::E>> Graph<Tr>::FWSP(){
+    unordered_map<N, unordered_map<N, E>> dist;
+    E inf = numeric_limits<E>::max();
+
+    for(auto it : nodes){
+        for(auto jt : nodes){
+            dist[it.first][jt.first] = inf;
+            if(it.first == jt.first){
+                dist[it.first][jt.first] = 0;
+            }
+        }
+    }
+
+    for(auto it : nodes){
+        for(edge* edg : it.second->edges){
+            N an = edg->nodes[1]->data;
+            dist[it.first][an] = edg->getData();
+        }
+    }
+
+    for(auto ik : nodes){
+        N k = ik.first;
+        for(auto ii : nodes){
+            N i = ii.first;
+            for(auto ij : nodes){
+                N j = ij.first;
+                if(dist[i][k] < inf  && dist[k][j] < inf){
+                    dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j]);;
+                }
+            }
+        }
+    }
+
+    return dist;
 }
 
 typedef Graph<Traits> graph;
