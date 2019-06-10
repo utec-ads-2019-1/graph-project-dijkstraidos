@@ -53,9 +53,7 @@ class Node {
             for(edge * e : edges){
                 delete e;
             }
-
             edges.clear();
-           //delete this;
         }
 
         N getData() {

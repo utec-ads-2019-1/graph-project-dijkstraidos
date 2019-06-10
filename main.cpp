@@ -1,4 +1,3 @@
-//#include <GL/glut.h>
 #include <iostream>
 
 #include "graph.h"
@@ -6,50 +5,12 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-    string file = "graph.txt";
+    string file;
+    cin>>file;
     graph test(file);
-    cout<<"Done"<<endl;
-
     test.printInfo();
-
-    cout<<test.findNode('Z')<<endl;
-
-    cout<<endl<<"BFS:"<<endl;
-    test.BFS(0);
-    cout<<endl<<"DFS:"<<endl;
-    test.DFS(0);
-
-
-
-    cout<<endl<<"KMST"<<endl;
-    graph KMST = test.kruskalMST();
-    KMST.BFS(0);
-    cout<<KMST.graphWeight()<<endl;
-    
-    cout<<endl<<"PMST"<<endl;
-    graph PMST = test.MST_Prim(0);
-    PMST.BFS(0);
-    cout<<PMST.graphWeight()<<endl;
-
-    if(!test.findEdge(0, 1)) cout << "No es encontró la arista entre A y B\n";
-
-    cout<<endl;
-    test.removeEdge(0, 2);
-    test.removeEdge(0, 3);
-
-    if(test.getType(0) == hoja) cout << "Hoja\n";
-
-    test.removeVertex(0);
-    cout<<endl<<"BFS:"<<endl;
-    test.BFS(0);
-
-    if(test.isDense(0.7)){
-        cout << "es denso" << endl;
-    }else{
-        cout << "no es denso" << endl;
-    }
-
-    cout << test.countEdges() << endl;
-
+    cout<<test.findEdge('a','c');
+    test.addEdge('a', 'c', 3);
+    cout<<test.findEdge('a','c');
     return EXIT_SUCCESS;
 }

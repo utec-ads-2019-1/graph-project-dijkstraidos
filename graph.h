@@ -15,9 +15,9 @@
 #include <set>
 #include <climits>
 
-#include "minpriorityqueue.h"
 #include "node.h"
 #include "edge.h"
+#include "disjointSet.h"
 
 using namespace std;
 
@@ -33,727 +33,616 @@ template <typename Tr>
 class Graph {
     public:
         typedef Graph<Tr> self;
-        typedef Node<self> node;
-        typedef Edge<self> edge;
-        typedef vector<node*> NodeSeq;
-        typedef list<edge*> EdgeSeq;
-        typedef MinPriorityQueue<self> min_priority_queue;
         typedef typename Tr::N N;
         typedef typename Tr::E E;
+        typedef Node<self> node;
+        typedef Edge<self> edge;
+        typedef unordered_map<N, node*> NodeSeq;
+        typedef vector<edge*> EdgeSeq;
         typedef typename NodeSeq::iterator NodeIte;
         typedef typename EdgeSeq::iterator EdgeIte;
 
-        struct u {
-            node* n;
-            E key;
-            struct u* parent;
-            u(node* n) : n(n), key(INT_MAX), parent(nullptr) {}
-        };
-        typedef struct u U;
-
-        map<node*, U*> m;
-        map<pair<node*, node*> , E> weights;
-        
     private:
         NodeSeq nodes;
         NodeIte ni;
         EdgeIte ei;
         bool directed = false;
         bool weighted = false;
-
-        void joinSet(unordered_map<node*, node*> &ds, node * a, node * b){
-            ds[findRoot(ds, a)] = ds[findRoot(ds, b)];
-        }
-
-        node* findRoot(unordered_map<node*, node*> &ds, node * a){
-            while(a != ds[a]){
-                ds[a] = ds[ds[a]]; //actualizar el valor de padre al padre de su padre
-                a = ds[a]; // a ahora también es el padre de su padre
-            }
-            return a;
-        }
-
-        bool areInSameSet(unordered_map<node*, node*> &ds, node * a, node *b){
-            if(findRoot(ds, a) == findRoot(ds, b)) return true;
-            return false;
-        }
-
-        bool nonDirected_addEdge(node* a, node* b){
-            if(findEdge(a, b)) throw "Esta lista ya existe";
-            edge* edgeLTR = new edge(a, b);
-            a->edges.emplace_back(edgeLTR);
-            edge* edgeRTL = new edge(b, a);
-            b->edges.emplace_back(edgeRTL);
-            return true;
-        }
-
-
-        bool directed_addEdge(node* a, node* b){
-            if(findEdge(a, b)) throw "Esta lista ya existe";
-            edge* newEdge = new edge(a, b);
-            a->edges.emplace_back(newEdge);
-            return true;
-        }
-
-        bool directed_addEdge(node* a, node* b, E w){ edge* newEdge = new edge(a, b, w);
-            if(findEdge(a, b)) throw "Esta lista ya existe";
-            a->edges.emplace_back(newEdge);
-            return true;
-        }
-
-        bool nonDirected_addEdge(node* a, node* b, E w){
-            if(findEdge(a, b)) throw "Esta lista ya existe";
-            edge* edgeLTR = new edge(a, b, w);
-            a->edges.emplace_back(edgeLTR);
-            edge* edgeRTL = new edge(b, a, w);
-            b->edges.emplace_back(edgeRTL);
-            return true;
-        }
-
-        bool directed_removeVertex(node * nToRemove){
-            if(!findVertex(nToRemove)) return false;
-            for(ni = nodes.begin(); ni != nodes.end(); ni++){
-                for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ei++){
-                    auto k = (*ei);
-                    if((*ei)->nodes[1] == nToRemove){
-                        (*ni)->edges.erase(ei);
-                        break;
-                    }
-                }
-            }
-            ni = find(nodes.begin(), nodes.end(), nToRemove);
-            nodes.erase(ni);
-            delete nToRemove;
-            return true;
-        }
-
-        bool nonDirected_removeVertex(node * nToRemove){
-            if(!findVertex(nToRemove)) return false;
-            for (ei = nToRemove->edges.begin(); ei != nToRemove->edges.end(); ++ei) {
-                (*ei)->nodes[1]->removeEdge(nToRemove);
-            }
-            ni = find(nodes.begin(), nodes.end(), nToRemove);
-            nodes.erase(ni);
-            delete nToRemove;
-            return true;
-        }
-
-        bool nonDirected_removeEdge(node * node1, node * node2){
-            return node1->removeEdge(node2) and node2->removeEdge(node1);
-        }
-
-        bool directed_removeEdge(node * node1, node * node2){
-            return node1->removeEdge(node2);
-        }
-
-        int absoluteEdgeCount(){
-            int count = 0;
-            for(ni = nodes.begin(); ni != nodes.end(); ni++){
-                count += (*ni)->edges.size();
-            }
-            return count;
-        }
-
-        bool nonDirected_isDense(float limit){
-            if((2*countEdges())/(nodes.size()*(nodes.size()-1)) > limit){
-                return true;
-            }
-            return false;
-        }
-
-        bool directed_isDense(float limit){
-            if((countEdges())/(nodes.size()*(nodes.size()-1)) > limit){
-                return true;
-            }
-            return false;
-        }
-
-        bool nonDirected_isConnected(){
-            unordered_map<node*, bool> visited;
-            queue<node*> next;
-            next.push(nodes[0]);
-            node *current;
-            while(!next.empty()){
-                current = next.front();
-                next.pop();
-                for(ei = current->edges.begin(); ei != current->edges.end(); ei++){
-                    if(!(visited[(*ei)->nodes[1]])) {
-                        next.push((*ei)->nodes[1]);
-                        visited[(*ei)->nodes[1]] = true;
-                    }
-                }
-            }
-            if(visited.size() == nodes.size()) return true;
-            return false;
-        }
-
-        bool directed_isConnected(){
-            unordered_map<node*, node*> set;
-            for(int i = 0; i < nodes.size(); i++){
-                for(ei = nodes[i]->edges.begin(); ei != nodes[i]->edges.end(); ei++){
-                    joinSet(set, nodes[i], (*ei)->nodes[1]);
-                }
-            }
-            node * lastRoot = set[nodes[0]];
-            for(auto it = set.begin(); it != set.end(); it++){
-                if(!areInSameSet(set, (*it).second, lastRoot)) return false;
-            }
-            return true;
-        }
-
-        bool directed_isBipartite(){
-            unordered_map<node*, bool> visited;
-            stack<pair<node*, bool>> next;
-            bool allMapped = false;
-            for(int i = 0; i < nodes.size(); i++){
-                next.push(make_pair(nodes[i], true));
-                while(!next.empty()){
-                    node* current = next.top().first;
-                    bool color = next.top().second;
-                    next.pop();
-
-                    if(visited.find(current) == visited.end()){
-                        visited[current] = color;
-                    }else{
-                        if(visited[current] != color) changeColors(visited);
-                    }
-
-                    for(edge* ep : current->edges){
-                        if(visited.find(ep->nodes[1]) == visited.end()){
-                            next.push(make_pair(ep->nodes[1], not color));
-                        }else{
-                            if(visited[ep->nodes[1]] == color) return false;
-                        }
-                    }
-                }
-                if(visited.size() == nodes.size()) break;
-            }
-            return true;
-        }
-
-        void changeColors(unordered_map<node*, bool> &myMap){
-            for(auto it : myMap){
-                it.second = not it.second;
-            }
-        }
-
-        bool nonDirected_isBipartite(){
-            unordered_map<node*, bool> visited;
-            stack<pair<node*, bool>> next;
-            next.push(make_pair(nodes[0], true));
-            while(!next.empty()){
-                node* current = next.top().first;
-                bool color = next.top().second;
-                next.pop();
-
-                if(visited.find(current) == visited.end()){
-                    visited[current] = color;
-                }else{
-                    if(visited[current] == color) return false;
-                }
-
-                for(edge* ep : current->edges){
-                    if(visited.find(ep->nodes[1]) == visited.end()){
-                        next.push(make_pair(ep->nodes[1], not color));
-                    }else{
-                        if(visited[ep->nodes[1]] == color) return false;
-                    }
-                }
-            }
-            return true;
-        }
-
-
-        vertex_Type nonDirected_getType(node * n){
-            if(!findVertex(n)) throw "Este vertice no esta en el grafo";
-            switch(n->edges.size()) {
-                case 0:
-                    return aislado;
-                case 1:
-                    return hoja;
-                default:
-                    return normal;
-            }
-        }
-
-        vertex_Type directed_getType(node * n){
-            if(!findVertex(n)) throw "Este vertice no esta en el grafo";
-            int inDegree = getInDegree(n);
-            if(getOutDegree(n) == 0 and inDegree == 0) return aislado;
-            else if (getOutDegree(n) == 0) return hundido;
-            else if (inDegree == 0) return fuente;
-            else return normal;
-        }
-
+        
     public:
-        static self* buildFromFile(string filename){
-            return new self(filename);
-        }
 
         Graph() = default;
-
-        explicit Graph(string filename){
-            ifstream file(filename);
-            int num_of_vertices, num_of_edges;
-
-            file>>num_of_vertices>>num_of_edges;
-            file>>directed>>weighted;
-
-            double x, y;
-            N data;
-            for(int i = 0; i<num_of_vertices; i++){
-                file>>data>>x>>y;
-                nodes.push_back(new node(data, x, y));
-            }
-
-            int l, r;
-            E w;
-            for(int i = 0; i<num_of_edges; i++){
-                file>>l>>r;
-                if(weighted){
-                    file>>w;
-                    addEdge(l, r, w);
-                }
-                else{
-                    addEdge(l, r);
-                }
-            }
-        }
-
-       explicit Graph(bool directed) : directed(directed) {};
-
-       Graph(bool directed, bool weighted) : directed(directed), weighted(weighted) {};
-
-        bool isDirected(){
-            return directed;
-        }
-
-        bool isWeighted() {
-            return weighted;
-        }
-
-        void printInfo(){
-            cout << "Este grafo es ";
-            if(this->directed) cout << "dirigido y ";
-            else cout << "no dirigido y ";
-            if(this->weighted) cout << "ponderado. ";
-            else cout << "no poderado.";
-            cout << "Tiene " << nodes.size() << " nodos y " << countEdges() << " aristas.\n";
-        }
-
-        node* addVertex(N val){
-            if(findNode(val)) throw "Este valor ya existe";
-            node* newNode = new node(val);
-            nodes.push_back(newNode);
-            return newNode;
-        }
-
-        node* addVertex(node* oldNode){
-            node* newNode = new node(oldNode);
-            nodes.push_back(newNode);
-            return newNode;
-        }
-
-        bool findNode(N val){
-            for(node* nd : nodes)
-                if(nd->data == val) return true;
-            return false;
-        }
-
-        bool addEdge(int a, int b){
-            return addEdge(nodes[a], nodes[b]);
-        }
-
-        bool addEdge(node* a, node* b){
-            if(a == nullptr || b == nullptr) return false;
-            if(this->weighted) __throw_invalid_argument("Falta indicar un peso para esta arista (grafo es ponderado)");
-            if (a == b) return false; //no se permiten lazos
-            if(this->directed) return directed_addEdge(a, b);
-            return nonDirected_addEdge(a, b);
-        }
-
-        bool addEdge(int a, int b, E w){
-            return addEdge(nodes[a], nodes[b], w);
-        }
-
-        bool addEdge(node * a, node * b, E w){
-            if(!this->weighted) __throw_invalid_argument("Este grafo no tiene pesos en sus aristas");
-            if(this->directed) directed_addEdge(a, b, w);
-            else nonDirected_addEdge(a, b, w);
-            return true;
-        }
-
-        bool removeVertex(int n){
-            return removeVertex(nodes[n]);
-        }
-
-        bool removeVertex(node * nToRemove){
-            ni = find(nodes.begin(), nodes.end(), nToRemove);
-            if (ni != nodes.end()){
-                if(this->directed) return directed_removeVertex(nToRemove);
-                return nonDirected_removeVertex(nToRemove);
-            }
-            return false;
-        }
-
-        bool removeEdge(int a, int b){
-            return removeEdge(nodes[a], nodes[b]);
-        }
-
-        bool removeEdge(node * node1, node * node2){
-            if(this->directed) return directed_removeEdge(node1, node2);
-            return nonDirected_removeEdge(node1, node2);
-        }
-
-        node * findVertex(node * searched){
-            auto it = find(nodes.begin(), nodes.end(), searched);
-            if(it != nodes.end()) return *it;
-            return nullptr;
-        }
-
-        edge* findEdge(int a, int b){
-            return findEdge(nodes[a], nodes[b]);
-        }
-
-        edge * findEdge(node * node1, node * node2){
-            if(!findVertex(node2)) throw ("No existe el nodo 2");
-            ni = find(nodes.begin(), nodes.end(), node1);
-            if(ni != nodes.end()){
-                for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ++ei){
-                    if((*ei)->nodes[1] == node2) return *ei;
-                }
-                return nullptr;
-            }else throw ("No existe el nodo 1");
-        }
-
-        //Esta parte puede ser optimizada. Lo dejo a su discreción si crear una función que cuente la cantidad absoluta
-        // y de ahí llamarla y dividirla entre dos o hacer una cosa completamente diferente
-        int countEdges(){
-            if(this->directed) return absoluteEdgeCount();
-            return absoluteEdgeCount()/2;
-        }
-
-        self DFS(int start){
-            unordered_map<node*, int> node_to_index;
-            vector<bool> vis(nodes.size(), false);
-            stack<pair<int, int>> next;
-            next.push(make_pair(start, -1));
-
-            self DFSTree;
-            for(int i = 0; i<nodes.size(); i++){
-                DFSTree.addVertex(nodes[i]);
-                node_to_index[nodes[i]] = i; 
-            }
-
-            while(!next.empty()){
-                int current = next.top().first;
-                int dad = next.top().second;
-                next.pop();
-
-                if(vis[current]) continue;
-                vis[current] = true;
-                cout<<nodes[current]->data<<endl;
-
-                if(dad >= 0){
-                    DFSTree.addEdge(dad, current);
-                }
-
-                for(edge* ep : nodes[current]->edges){
-                    int vertex = node_to_index[ep->nodes[1]];
-                    if(vis[vertex]) continue;
-                    next.push(make_pair(vertex, current));
-                }
-            }
-            return DFSTree;
-        }
-
-        self BFS(int start){
-            unordered_map<node*, int> node_to_index;
-            vector<bool> vis(nodes.size(), false);
-            queue<pair<int, int>> next;
-            next.push(make_pair(start, -1));
-
-            self BFSTree;
-            for(int i = 0; i<nodes.size(); i++){
-                BFSTree.addVertex(nodes[i]);
-                node_to_index[nodes[i]] = i; 
-            }
-        
-            vis[start] = true;
-            while(!next.empty()){
-                int current = next.front().first;
-                int dad = next.front().second;
-                next.pop();
-                cout<<nodes[current]->data<<endl;
-
-                if(dad >= 0){
-                    BFSTree.addEdge(dad, current);
-                }
-
-                for(edge* ep : nodes[current]->edges){
-                    int vertex = node_to_index[ep->nodes[1]];
-                    if(vis[vertex]) continue;
-                    next.push(make_pair(vertex, current));
-                    vis[vertex] = true;
-                }
-            }
-
-            return BFSTree;
-        }
-
-        bool isDense(float limit){
-            if (this->directed) return directed_isDense(limit);
-            return nonDirected_isDense(limit);
-        }
-
-
-        bool isConnected(){
-            if(nodes.size() == 0) throw ("Este grafo no tiene elementos");
-            if(this->directed) return directed_isConnected();
-            return nonDirected_isConnected();
-        }
-
-
-        bool isStronglyConnected(){
-            if(nodes.size() == 0) throw ("Este grafo no tiene elementos");
-            if(this->directed){
-                if(nodes.size() == 1) return true;
-                unordered_map<node*, bool> visited;
-                stack<node*> next;
-                next.push(nodes[0]);
-
-                while(!next.empty()){
-                    node* current = next.top();
-                    next.pop();
-
-                    visited[current] = true;
-
-                    for(edge* ep : current->edges){
-                        if(visited[ep->nodes[1]]) continue;
-                        next.push(ep->nodes[1]);
-                    }
-                }
-
-                if(visited.size() != nodes.size()) return false;
-                for(int i = 1; i < nodes.size(); i++){
-                    visited.clear();
-                    next.push(nodes[i]);
-                    bool found = false;
-                    while(!next.empty() and !found){
-                        node* current = next.top();
-                        next.pop();
-                        visited[current] = true;
-
-                        for(edge* ep : current->edges){
-                            if(ep->nodes[1] == nodes[0]) {
-                                found = true;
-                                break;
-                            }
-                            next.push(ep->nodes[1]);
-                        }
-                    }
-                    if(!found) return false;
-                }
-                return true;
-            }
-            if(this->nonDirected_isConnected()) return true;
-            return false;
-        }
-
-        bool isBipartite(){
-            if(this->directed) return directed_isBipartite();
-            return nonDirected_isBipartite();
-        }
-
-        vertex_Type getType(int n){
-            return getType(nodes[n]);
-        }
-
-        vertex_Type getType(node * n){
-            if(this->directed) return directed_getType(n);
-            return nonDirected_getType(n);
-        }
-
-        //quizás esto estaŕia mejor en la clase node misma
-        int getOutDegree(node * n){
-            return n->edges.size();
-        }
-
-        int getInDegree(node * n){
-            int count = 0;
-            for (ni = nodes.begin(); ni != nodes.end(); ni++) {
-                for (ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ei++) {
-                    if ((*ei)->nodes[1] == n) count++;
-                }
-            }
-            return count;
-        }
-
-        unordered_map<node*, pair<int, int>> * directed_getAllDegrees(){
-            unordered_map<node*, pair<int, int>> tally; //first es lo que salen, second es el que entra
-            for(ni = nodes.begin(); ni != nodes.end(); ni++){
-                if(tally.find(*ni) == tally.end()) tally[*ni] = make_pair(getOutDegree(*ni), 0);
-                for(ei = (*ni)->edges.begin(); ei != (*ni)->edges.end(); ei++){
-                    if(tally.find((*ei)->nodes[1]) == tally.end()){
-                        tally[(*ei)->nodes[1]] = 1;
-                    }else{
-                        tally[(*ei)->nodes[1]] = tally[(*ei)->nodes[1]] +1;
-                    }
-                }
-            }
-            return tally;
-        }
-
-        E graphWeight(){
-            E totalWeight = 0;
-            for(node* nd : nodes){
-                for(edge* edg : nd->edges){
-                    totalWeight += edg->getData();
-                }
-            }
-            if(!directed) totalWeight /= 2;
-            return totalWeight;
-        }
-
-        self kruskalMST(){
-            unordered_map<node*, int> node_to_index;
-            self MST; 
-            unordered_map<node*, node*> ds;
-            MST.weighted = true;
-            MST.directed = false;
-
-            auto edgeCompare = [](edge* l, edge* r){return l->getData() < r->getData();};
-            multiset<edge*, decltype(edgeCompare)> edges(edgeCompare);
-            
-            for(int i = 0; i<nodes.size(); i++){
-                node_to_index[nodes[i]] = i;
-                MST.addVertex(nodes[i]);
-                ds[nodes[i]] = nodes[i];
-            }
-
-            for(node* vertex: nodes){
-                for(edge* edg : vertex->edges){
-                    edges.insert(edg);
-                }
-            }
-            
-            for(edge* edg : edges){
-                if(!areInSameSet(ds, edg->nodes[0], edg->nodes[1])){
-                    joinSet(ds, edg->nodes[0], edg->nodes[1]);
-                    int idxA = node_to_index[edg->nodes[0]];
-                    int idxB = node_to_index[edg->nodes[1]];
-                    MST.addEdge(idxA, idxB, edg->getData());
-                }
-            }
-
-            return MST;
-        }
-
-        E weight(node* n1, node* n2) {
-            // TODO: Handle the case when it's directed
-            if(weights.count({n1,n2}) == 0) {
-                edge* e1 = findEdge(n2,n1);
-                edge* e2 = findEdge(n1, n2);
-                weights[{n1,n2}] = e1->getData();
-                weights[{n2,n1}] = e2->getData();
-            }
-            return weights[{n1,n2}];
-        }
-
-        self MST_Prim(int start){
-            unordered_map<node*, int> node_to_index;
-            vector<bool> vis(nodes.size(), false);
-            vector<int> parent(nodes.size(), -1);
-            vector<E> dist(nodes.size(), -1);
-
-            priority_queue<pair<E, int>, vector<pair<E, int>>, greater<pair<E, int>>> pq;
-
-            self MST;
-            MST.weighted = true;
-            MST.directed = false;
-
-            for(int i = 0; i<nodes.size(); i++){
-                MST.addVertex(nodes[i]);
-                node_to_index[nodes[i]] = i;
-            }
-
-            pq.push(make_pair(0, start));
-            dist[start] = 0;
-            while(!pq.empty()){
-                int curr = pq.top().second;
-                pq.pop();
-                if(vis[curr]) continue;
-                vis[curr] = true;
-                if(parent[curr] >= 0){
-                    MST.addEdge(parent[curr], curr, dist[curr]);
-                }
-                for(edge* edg : nodes[curr]->edges){
-                    int nd = node_to_index[edg->nodes[1]];
-                    int w = edg->getData();
-                    if(vis[nd]) continue;
-                    if(w < dist[nd] || dist[nd] == -1){
-                        dist[nd] = w;
-                        parent[nd] = curr;
-                        pq.push(make_pair(w, nd));
-                    }
-                }
-            }
-
-            return MST;
-        }
-
-            
-
-        /*`self MST_Prim(node* r) {
-            cout << "root " << r->data << endl;
-            vector<pair<node*, U*> > Q;
-            map<node*,bool> inQ;
-            m.clear();
-            for(node* n : nodes) {
-                U* x = new U(n);
-                m[n] = x;
-                inQ[n] = true;
-                Q.push_back(make_pair(n,x));
-            }
-            m[r]->key = 0;
-            std::cout << "vector size " << Q.size() << endl;
-            min_priority_queue minQ(Q);
-            minQ.buildMinHeap();
-            min_priority_queue V(minQ);
-            while(minQ.size() > 0) {
-                U* u = minQ.heapExtractMin();
-                inQ[u->n] = false;
-                cout<<u->n->data<<endl;
-                for(edge* e : u->n->edges) {
-                    U* v = m[e->nodes[1]];
-                    if(inQ[v->n] && weight(u->n,v->n) < v->key) {
-                        v->parent = u;
-                        V.heapDecreaseKey(v, weight(u->n,v->n));
-                    }
-                }
-            }
-            self MST;
-            std::vector<std::pair<node*,U*> >A =  V.getData();
-            cout << "after operations " << A.size()<< endl;
-            for(pair<node*,U*> p : A) {
-                MST.addVertex(p.first); cout << "adding vertex " << p.first->data << endl;
-            }
-            for(pair<node*,U*> p : A) {
-                char d = p.second->parent ? p.second->parent->n->data : '0';
-                cout << "adding edge from " << p.first->data << " to edge " << d << endl;
-                MST.addEdge(p.first, p.second->parent ? p.second->parent->n : nullptr);
-            }
-            return MST;
-        }*/
+        explicit Graph(string);
+        explicit Graph(bool directed) : directed(directed) {};
+        Graph(bool directed, bool weighted) : directed(directed), weighted(weighted) {};
+
+        bool isDirected(){return directed;}
+        bool isWeighted(){return weighted;}
+
+        void addVertex(N);
+        void addVertex(node*);
+
+        bool addEdge(N, N);
+        bool addEdge(N, N, E);
+        bool addEdge(node*, node*, E);
+
+        bool removeVertex(N);
+        bool removeEdge(N, N);
+
+        bool findNode(N);
+        bool findEdge(N, N);
+        bool findEdge(node*, node*);
+
+        void printInfo();
+        int countEdges();
+        bool isDense(float limit);
+        self transpose();
+        vertex_Type getType(N);
+        vertex_Type getType(node*);
+        E graphWeight();
+
+        int getInDegree(N);
+        int getOutDegree(N);
+        unordered_map<N, pair<int, int>> degrees();
+
+        bool connected();
+        bool strongly_connected();
+        bool bipartite();
+
+        self BFS(N);
+        self DFS(N);
+
+        self kruskalMST();
+        self primMST(N);
 
         ~Graph(){
-            for(node * it : nodes){
-                delete it;
+            for(auto it : nodes){
+                delete it.second;
             }
 
             nodes.clear();
         }
+
+    private:
+
+        void directed_addEdge(node* a, node* b, E w);
+        void nonDirected_addEdge(node* a, node* b, E w);
+
+        void directed_removeVertex(node * nToRemove);
+        void nonDirected_removeVertex(node * nToRemove);
+
+        bool removeEdge(node * node1, node * node2);
+
+        int absoluteEdgeCount();
+
+        vertex_Type nonDirected_getType(node*);
+        vertex_Type directed_getType(node*);
+
 };
+
+template <typename Tr>
+Graph<Tr>::Graph(string filename){
+    ifstream file(filename);
+    int num_of_vertices, num_of_edges;
+
+    file>>num_of_vertices>>num_of_edges;
+    file>>directed>>weighted;
+
+    double x, y;
+    N data;
+    for(int i = 0; i<num_of_vertices; i++){
+        file>>data>>x>>y;
+        nodes[data] = new node(data, x, y);
+    }
+
+    N l, r;
+    E w = 1;
+    for(int i = 0; i<num_of_edges; i++){
+        file>>l>>r;
+        if(weighted){
+            file>>w;
+        }
+        addEdge(l, r, w);
+    }
+}
+
+//Add Vertex
+
+template <typename Tr>
+void Graph<Tr>::addVertex(N val){
+    node* newNode = new node(val);
+    nodes[val] = newNode;
+}
+
+template <typename Tr>
+void Graph<Tr>::addVertex(node* oldNode){
+    node* newNode = new node(oldNode);
+    nodes[oldNode->data] = newNode;
+}
+
+// Add Edge
+
+template <typename Tr>
+bool Graph<Tr>::addEdge(N a, N b){
+    return addEdge(a, b, 1);
+}
+
+template <typename Tr>
+bool Graph<Tr>::addEdge(N a, N b, E w){
+    bool find_a = nodes.find(a) == nodes.end();
+    bool find_b = nodes.find(b) == nodes.end();
+    if(find_a || find_b){
+        throw "Not a Value on the graph!";
+    }
+    return addEdge(nodes[a], nodes[b], w);
+}
+
+template <typename Tr>
+bool Graph<Tr>::addEdge(node * a, node * b, E w){
+    if(this->directed) directed_addEdge(a, b, w);
+    else nonDirected_addEdge(a, b, w);
+    return true;
+}
+
+template <typename Tr>
+void Graph<Tr>::directed_addEdge(node* a, node* b, E w){ edge* newEdge = new edge(a, b, w);
+    a->edges.emplace_back(newEdge);
+}
+
+template <typename Tr>
+void Graph<Tr>::nonDirected_addEdge(node* a, node* b, E w){
+    edge* edgeLTR = new edge(a, b, w);
+    a->edges.emplace_back(edgeLTR);
+    edge* edgeRTL = new edge(b, a, w);
+    b->edges.emplace_back(edgeRTL);
+}
+
+//Remove Vertex
+
+template <typename Tr>
+bool Graph<Tr>::removeVertex(N n){
+    if(nodes.find(n) == nodes.end()) return false;
+    if(this->directed){
+        directed_removeVertex(nodes[n]);
+    }
+    else{
+        nonDirected_removeVertex(nodes[n]);
+    }
+    delete nodes[n];
+    nodes.erase(n);
+    return true;
+}
+
+template <typename Tr>
+void Graph<Tr>::directed_removeVertex(node * nToRemove){
+    for(auto it : nodes){
+        node* vert = it.second;
+        vert->removeEdge(nToRemove);
+    }
+}
+
+template <typename Tr>
+void Graph<Tr>::nonDirected_removeVertex(node * nToRemove){
+    for(edge* e : nToRemove->edges){
+        node* vert = e->nodes[1];
+        vert->removeEdge(nToRemove);
+    }
+}
+
+//Remove Edge
+
+template <typename Tr>
+bool Graph<Tr>::removeEdge(N a, N b){
+    return removeEdge(nodes[a], nodes[b]);
+}
+
+template <typename Tr>
+bool Graph<Tr>::removeEdge(node * node1, node * node2){
+    node1->removeEdge(node2);
+    if(directed) node2->removeEdge(node1);
+    return true;
+}
+
+//find functions
+
+template <typename Tr>
+bool Graph<Tr>::findNode(N val){
+    return nodes.find(val) != nodes.end();
+}
+
+template <typename Tr>
+bool Graph<Tr>::findEdge(N a, N b){
+    return findEdge(nodes[a], nodes[b]);
+}
+
+template <typename Tr>
+bool Graph<Tr>::findEdge(node *node1, node *node2){
+    for(edge* edg : node1->edges){
+        if(edg->nodes[1] == node2) return true;
+    }
+    return false;
+}
+
+//Utility Functions
+
+template <typename Tr>
+void Graph<Tr>::printInfo(){
+    cout << "Este grafo es ";
+    if(this->directed) cout << "dirigido y ";
+    else cout << "no dirigido y ";
+    if(this->weighted) cout << "ponderado. ";
+    else cout << "no poderado.";
+    cout << "Tiene " << nodes.size() << " nodos y " << countEdges() << " aristas.\n";
+}
+
+template <typename Tr>
+int Graph<Tr>::countEdges(){
+    if(this->directed) return absoluteEdgeCount();
+    return absoluteEdgeCount()/2;
+}
+
+template <typename Tr>
+int Graph<Tr>::absoluteEdgeCount(){
+    int count = 0;
+    for(auto it : nodes){
+        count += it.second->edges.size();
+    }
+    return count;
+}
+
+template <typename Tr>
+bool Graph<Tr>::isDense(float limit){
+    int maxEdges = nodes.size()*(nodes.size()-1);
+    int numEdges = absoluteEdgeCount();
+    return numEdges/maxEdges;
+}
+
+template <typename Tr>
+Graph<Tr> Graph<Tr>::transpose(){
+    unordered_map<node*, N> node_to_index;
+    self TG(directed, weighted);
+
+    for(auto it : nodes){
+        TG.addVertex(it.second);
+        node_to_index[it.second] = it.first;
+    }
+
+    for(auto it : nodes){
+        N start = it.first;
+        for(edge * edg : it.second->edges){
+            N finish = node_to_index[edg->nodes[1]];
+            TG.addEdge(finish, start, edg->getData());
+        }
+    }
+
+    return TG;
+}
+
+template <typename Tr>
+vertex_Type Graph<Tr>::nonDirected_getType(node * n){
+    if(!findVertex(n)) throw "Este vertice no esta en el grafo";
+    switch(n->edges.size()) {
+        case 0:
+            return aislado;
+        case 1:
+            return hoja;
+        default:
+            return normal;
+    }
+}
+
+template <typename Tr>
+vertex_Type Graph<Tr>::directed_getType(node * n){
+    if(!findVertex(n)) throw "Este vertice no esta en el grafo";
+    int inDegree = getInDegree(n);
+    if(getOutDegree(n) == 0 and inDegree == 0) return aislado;
+    else if (getOutDegree(n) == 0) return hundido;
+    else if (inDegree == 0) return fuente;
+    else return normal;
+}
+
+template <typename Tr>
+vertex_Type Graph<Tr>::getType(N n){
+    return getType(nodes[n]);
+}
+
+template <typename Tr>
+vertex_Type Graph<Tr>::getType(node * n){
+    if(this->directed) return directed_getType(n);
+    return nonDirected_getType(n);
+}
+
+template <typename Tr>
+typename Graph<Tr>::E Graph<Tr>::graphWeight(){
+    E totalWeight = 0;
+    for(node* nd : nodes){
+        for(edge* edg : nd->edges){
+            totalWeight += edg->getData();
+        }
+    }
+    if(!directed) totalWeight /= 2;
+    return totalWeight;
+}
+
+template <typename Tr>
+int Graph<Tr>::getOutDegree(N n){
+    return nodes[n]->edges.size();
+}
+
+template <typename Tr>
+int Graph<Tr>::getInDegree(N n){
+    if(!directed) return getOutDegree(n);
+
+    int edgs = 0;
+
+    for(auto it : nodes){
+        if(it.first == n) continue;
+        for(edge* edg : it.second->edges){
+            N adjNode = edg->nodes[1]->data;
+            if(adjNode == n) edgs++;
+        }
+    }
+
+    return edgs;
+}
+
+template <typename Tr>
+unordered_map<typename Graph<Tr>::N, pair<int, int>> Graph<Tr>::degrees(){
+    unordered_map<N, pair<int, int>> dgrs;
+
+    for(auto it : nodes){
+        dgrs[it.first].first = it.second->edges.size();
+        for(edge* edg : it.second->edges){
+            N nd = edg->nodes[1]->data;
+            dgrs[nd].second++;
+        }
+    }
+
+    return dgrs;
+}
+
+//Connectivity
+
+template <typename Tr>
+bool Graph<Tr>::connected(){
+    disjoint_set<node*> ds;
+    for(auto it : nodes){
+        ds[it.second] = it.second;
+    }
+
+    for(auto it : nodes){
+        for(edge* e : it.second->edges){
+            ds.joinSet(e->nodes[0], e->nodes[1]);
+        }
+    }
+
+    node* rt = ds.findRoot((*nodes.begin()).second);;
+    for(auto it : nodes){
+        if(ds.findRoot(it.second) != rt){
+            return false;
+        }
+    }
+
+    return true;
+}
+
+template <typename Tr>
+bool Graph<Tr>::strongly_connected(){
+    self bfs = BFS(nodes.begin()->first);
+
+    if(bfs.nodes.size() != nodes.size()){
+        return false;
+    }
+
+    self trans_graph = transpose();
+    self tbfs = trans_graph.BFS(nodes.begin()->first);
+
+    if(tbfs.nodes.size() != nodes.size()){
+        return false;
+    }
+
+    return true;
+}
+
+template <typename Tr>
+bool Graph<Tr>::bipartite(){
+    unordered_map<node*, bool> color;
+    queue<node*> next;
+
+    for(auto it : nodes){
+        node* nd = it.second;
+        if(color.find(nd) != color.end()) continue;
+        next.push(nd);
+        color[nd] = true;
+
+        while(!next.empty()){
+            node* current = next.front();
+            next.pop();
+            for(edge* edg : current->edges){
+                node* adjNode = edg->nodes[1];
+                if(color.find(adjNode) == color.end()){
+                    color[adjNode] = !color[current];
+                    next.push(adjNode);
+                }
+                else if(color[adjNode] == color[current]){
+                    return false;
+                }
+            }
+        }
+    }
+    
+    return true;
+}
+
+    
+//Graph Search
+
+template <typename Tr>
+Graph<Tr> Graph<Tr>::BFS(N start){
+    unordered_map<node*, N> node_to_index;
+    unordered_map<N, N> parent;
+    unordered_map<N, bool> vis;
+    queue<N> next;
+
+    for(auto it : nodes){
+        node_to_index[it.second] = it.first;
+    }
+
+    self BFSTree(directed, weighted);
+
+    vis[start] = true;
+    parent[start] = start;
+    next.push(start);
+
+    while(!next.empty()){
+        N current = next.front();
+        next.pop();
+        cout<<current<<endl;
+        
+        if(BFSTree.nodes.find(current) == BFSTree.nodes.end()){
+            BFSTree.addVertex(nodes[current]);
+        }
+
+        if(parent[current] != current){
+            BFSTree.addEdge(parent[current], current);
+        }
+
+        for(edge* edg : nodes[current]->edges){
+            N adjNode = node_to_index[edg->nodes[1]];
+            if(vis[adjNode]) continue;
+            vis[adjNode] = true;
+            parent[adjNode] = current;
+            next.push(adjNode);
+        }
+    }
+
+    return BFSTree;
+}
+
+template <typename Tr>
+Graph<Tr> Graph<Tr>::DFS(N start){
+    unordered_map<node*, N> node_to_index;
+    unordered_map<N, N> parent;
+    unordered_map<N, bool> vis;
+    stack<N> next;
+
+    for(auto it : nodes){
+        node_to_index[it.second] = it.first;
+    }
+
+    self DFSTree(directed, weighted);
+
+    parent[start] = start;
+    next.push(start);
+
+    while(!next.empty()){
+        N current = next.top();
+        next.pop();
+        if(vis[current]) continue;
+        vis[current] = true;
+        cout<<current<<endl;
+        
+        if(DFSTree.nodes.find(current) == DFSTree.nodes.end()){
+            DFSTree.addVertex(nodes[current]);
+        }
+
+        if(parent[current] != current){
+            DFSTree.addEdge(parent[current], current);
+        }
+
+        for(edge* edg : nodes[current]->edges){
+            N adjNode = node_to_index[edg->nodes[1]];
+            if(vis[adjNode]) continue;
+            parent[adjNode] = current;
+            next.push(adjNode);
+        }
+    }
+
+    return DFSTree;
+}
+
+//Minumum Spanning Tree
+
+template <typename Tr>
+Graph<Tr> Graph<Tr>::kruskalMST(){
+    unordered_map<node*, N> node_to_index;
+    self MST; 
+    disjoint_set<N> ds;
+    MST.weighted = true;
+    MST.directed = false;
+
+    auto edgeCompare = [](edge* l, edge* r){return l->getData() < r->getData();};
+    multiset<edge*, decltype(edgeCompare)> edges(edgeCompare);
+    
+    for(auto it : nodes){
+        node_to_index[it.second] = it.first;
+        MST.addVertex(it.second);
+        ds[it.first] = it.first;
+        for(edge* edg : it.second->edges){
+            edges.insert(edg);
+        }
+    }
+
+    for(edge* edg : edges){
+        N nd1 = node_to_index[edg->nodes[0]];
+        N nd2 = node_to_index[edg->nodes[1]];
+        if(!ds.areInSameSet(nd1, nd2)){
+            ds.joinSet(nd1, nd2);
+            MST.addEdge(nd1, nd2, edg->getData());
+        }
+    }
+
+    return MST;
+}
+
+template <typename Tr>
+Graph<Tr> Graph<Tr>::primMST(N start){
+    unordered_map<node*, N> node_to_index;
+    unordered_map<N, N> parent;
+    unordered_map<N, bool> vis;
+    unordered_map<N, E> weight;
+
+    priority_queue<pair<E, N>, vector<pair<E, N>>, greater<pair<E, N>>> pq;
+
+    self MST;
+    MST.weighted = true;
+    MST.directed = false;
+
+    for(auto it : nodes){
+        node_to_index[it.second] = it.first;
+    }
+
+    pq.push(make_pair(0, start));
+    parent[start] = start;
+    while(!pq.empty()){
+        N curr = pq.top().second;
+        E weig = pq.top().first;
+        pq.pop();
+
+        if(vis[curr]) continue;
+        vis[curr] = true;
+
+        if(MST.nodes.find(curr) == MST.nodes.end()){
+            MST.addVertex(nodes[curr]);
+        }
+        if(parent[curr] != curr){
+            MST.addEdge(parent[curr], curr, weig);
+        }
+
+        for(edge* edg : nodes[curr]->edges){
+            int nd = node_to_index[edg->nodes[1]];
+            int w = edg->getData();
+            if(vis[nd]) continue;
+            if(weight.find(nd) == weight.end() || weight[nd] < w){
+                parent[nd] = curr;
+                weight[nd] = w;
+                pq.push(make_pair(w, nd));
+            }
+        }
+    }
+
+    return MST;
+}
 
 typedef Graph<Traits> graph;
 
