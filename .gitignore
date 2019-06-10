@@ -37,6 +37,9 @@
 #Swap files
 *.swp
 
+#Debugger
+*.dSYM*
+
 #ignore cmakelists.txt
 CMakeLists.txt
 /cmake-build-debug/*
