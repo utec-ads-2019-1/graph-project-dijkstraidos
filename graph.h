@@ -94,7 +94,8 @@ class Graph {
 
         self kruskalMST();
         self primMST(N);
-
+        
+        unordered_map<N, pair<E, N>> dijkstra(N);
         unordered_map<N, unordered_map<N,E>> FWSP();
 
         ~Graph(){
@@ -663,6 +664,71 @@ unordered_map<typename Graph<Tr>::N, unordered_map<typename Graph<Tr>::N, typena
 
     return dist;
 }
+
+template <typename Tr>
+unordered_map<typename Graph<Tr>::N, pair<typename Graph<Tr>::E, typename Graph<Tr>::N>> Graph<Tr>::dijkstra(N start){
+    unordered_map<N, pair<E, N>> distances;
+    queue<N> next;  //priority queue de pares
+    
+    distances[start] = make_pair(0, start);
+    next.push(start);
+
+    while(!next.empty()){
+        N current = next.front();
+        next.pop();
+        
+        E distUntilNow = distances[current].first;
+
+        for(edge* e : nodes[current]->edges){
+            if(distances.find(e->nodes[1]->data) == distances.end()){
+                next.push(e->nodes[1]->data);
+                distances[e->nodes[1]->data] = make_pair(distUntilNow + e->getData(), current);
+                continue;
+            }
+            if(distances[e->nodes[1]->data].first > e->getData() + distUntilNow){
+                distances[e->nodes[1]->data] = make_pair(e->getData() + distUntilNow, current);
+            }
+        }
+    }
+    return distances;
+}
+
+/*template <typename Tr>
+Graph<Tr> Graph<Tr>::BFS(N start){
+    unordered_map<N, N> parent;
+    unordered_map<N, bool> vis;
+    queue<N> next;
+
+    self BFSTree(directed, weighted);
+
+    vis[start] = true;
+    parent[start] = start;
+    next.push(start);
+
+    while(!next.empty()){
+        N current = next.front();
+        next.pop();
+        cout<<current<<endl;
+        
+        if(BFSTree.nodes.find(current) == BFSTree.nodes.end()){
+            BFSTree.addVertex(nodes[current]);
+        }
+
+        if(parent[current] != current){
+            BFSTree.addEdge(parent[current], current);
+        }
+
+        for(edge* edg : nodes[current]->edges){
+            N adjNode = edg->nodes[1]->data;
+            if(vis[adjNode]) continue;
+            vis[adjNode] = true;
+            parent[adjNode] = current;
+            next.push(adjNode);
+        }
+    }
+
+    return BFSTree;
+}*/
 
 typedef Graph<Traits> graph;
 
