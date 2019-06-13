@@ -668,25 +668,26 @@ unordered_map<typename Graph<Tr>::N, unordered_map<typename Graph<Tr>::N, typena
 template <typename Tr>
 unordered_map<typename Graph<Tr>::N, pair<typename Graph<Tr>::E, typename Graph<Tr>::N>> Graph<Tr>::dijkstra(N start){
     unordered_map<N, pair<E, N>> distances;
-    queue<N> next;  //priority queue de pares
-    
+    priority_queue<pair<E, N>, vector<pair<E,N>>, greater<pair<E, N>>> next;  //priority queue de pares
+
     distances[start] = make_pair(0, start);
-    next.push(start);
+    next.push(make_pair(0,start));
 
     while(!next.empty()){
-        N current = next.front();
+        N current = next.top().second;
         next.pop();
         
         E distUntilNow = distances[current].first;
 
         for(edge* e : nodes[current]->edges){
             if(distances.find(e->nodes[1]->data) == distances.end()){
-                next.push(e->nodes[1]->data);
+                next.push(make_pair(distUntilNow + e->getData(), e->nodes[1]->data));
                 distances[e->nodes[1]->data] = make_pair(distUntilNow + e->getData(), current);
                 continue;
             }
             if(distances[e->nodes[1]->data].first > e->getData() + distUntilNow){
                 distances[e->nodes[1]->data] = make_pair(e->getData() + distUntilNow, current);
+                next.push(make_pair(e->getData() + distUntilNow, current));
             }
         }
     }
