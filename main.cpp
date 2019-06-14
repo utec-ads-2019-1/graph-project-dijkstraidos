@@ -22,5 +22,8 @@ int main(int argc, char *argv[]) {
     cout << endl;
     test2->DFS('A');
 
+    graph temp = test.BFS('a');
+    temp.BFS('a');
+
     return EXIT_SUCCESS;
 }
