@@ -96,6 +96,7 @@ class Graph {
         self* primMST(N);
 
         unordered_map<N, unordered_map<N,E>> FWSP();
+        unordered_map<N,E> BellmanFord(N);
 
         unordered_map<N, pair<double, double>> getNodesOGL(){
             unordered_map<N, pair<double, double>> pos;
@@ -677,6 +678,45 @@ unordered_map<typename Graph<Tr>::N, unordered_map<typename Graph<Tr>::N, typena
                 }
             }
         }
+    }
+
+    return dist;
+}
+
+template <typename Tr>
+unordered_map<typename Graph<Tr>::N, typename Graph<Tr>::E> Graph<Tr>::BellmanFord(typename Graph<Tr>::N start) {
+    unordered_map<N, E> dist;
+    unordered_map<node*, N> sedon;
+    E inf = numeric_limits<E>::max();
+    typename Graph<Tr>::EdgeSeq edges;
+
+    for(auto n : nodes) {
+        dist[n.first] = inf;
+        sedon[n.second] = n.first;
+        typename Graph<Tr>::EdgeSeq nodesEdges = n.second.getEdges();
+        for(typename Graph<Tr>::edge* e : nodesEdges)
+            edges.push_back(e);
+    }
+    dist[start] = 0;
+
+    int V = nodes.size();
+
+    for(int i = 0; i < V-1; ++i) {
+        for(typename Graph<Tr>::edge* e: edges) {
+            N u = sedon[e->nodes[0]];
+            N v = sedon[e->nodes[1]];
+            E weight = e->getData();
+            if(dist[u] != inf && dist[u] + weight < dist[v])
+                dist[v] = dist[u] + weight;
+        }
+    }
+
+    for(typename Graph<Tr>::edge* e: edges) {
+        N u = sedon[e->nodes[0]];
+        N v = sedon[e->nodes[1]];
+        E weight = e->getData();
+        if(dist[u] != inf && dist[u] + weight < dist[v])
+            cout << "El grafo contiene un ciclo de pesos negativos" << endl;
     }
 
     return dist;

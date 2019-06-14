@@ -59,6 +59,10 @@ class Node {
             return data;
         }
 
+        EdgeSeq getEdges() {
+            return edges;
+        }
+
         edge* edgeWith(Node* node) {
             for(edge* e : edges) {
                 if(e->nodes[1] == node) return e;
