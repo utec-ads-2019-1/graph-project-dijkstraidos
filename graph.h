@@ -97,6 +97,7 @@ class Graph {
         
         unordered_map<N, pair<E, N>> dijkstra(N);
         unordered_map<N, unordered_map<N,E>> FWSP();
+        self * aStar(N, N);
 
         ~Graph(){
             for(auto it : nodes){
@@ -121,6 +122,9 @@ class Graph {
         vertex_Type nonDirected_getType(node*);
         vertex_Type directed_getType(node*);
 
+        void updateTentativeDistance(edge *, N, N, pair<N, E> &, E &);
+        
+        int getManhattan(N, N);
 };
 
 template <typename Tr>
@@ -667,6 +671,7 @@ unordered_map<typename Graph<Tr>::N, unordered_map<typename Graph<Tr>::N, typena
 
 template <typename Tr>
 unordered_map<typename Graph<Tr>::N, pair<typename Graph<Tr>::E, typename Graph<Tr>::N>> Graph<Tr>::dijkstra(N start){
+    if(!this->weighted) throw("Este grafo no es ponderado");
     unordered_map<N, pair<E, N>> distances;
     priority_queue<pair<E, N>, vector<pair<E,N>>, greater<pair<E, N>>> next;  //priority queue de pares
 
@@ -694,42 +699,52 @@ unordered_map<typename Graph<Tr>::N, pair<typename Graph<Tr>::E, typename Graph<
     return distances;
 }
 
-/*template <typename Tr>
-Graph<Tr> Graph<Tr>::BFS(N start){
-    unordered_map<N, N> parent;
-    unordered_map<N, bool> vis;
-    queue<N> next;
+template <typename Tr>
+int Graph<Tr>::getManhattan(N start, N end){
+    return abs(nodes[start]->getX() -  nodes[end]->getX()) + abs(nodes[start]->getY() - nodes[end]->getY());
+}
 
-    self BFSTree(directed, weighted);
+template <typename Tr>
+Graph<Tr> * Graph<Tr>::aStar(N start, N end){
+    auto path = new Graph<Tr>;
+    unordered_map<N, bool> visited;
+    N current = start;
+    pair<N, E> leastCost;
+    leastCost= make_pair(start, 0);
 
-    vis[start] = true;
-    parent[start] = start;
-    next.push(start);
+    do{
+        path->addVertex(leastCost.first);
+        if (leastCost.first != start) path->addEdge(current, leastCost.first, leastCost.second);
 
-    while(!next.empty()){
-        N current = next.front();
-        next.pop();
-        cout<<current<<endl;
+        if(leastCost.first == end) return path;
+        visited[leastCost.first] = true;
         
-        if(BFSTree.nodes.find(current) == BFSTree.nodes.end()){
-            BFSTree.addVertex(nodes[current]);
+        current = leastCost.first;
+        int tentativeDistance = numeric_limits<E>::max();
+
+        for(edge* e : nodes[current]->edges){
+            N nextNode = e->nodes[1]->data;
+            if(visited[nextNode]) continue;
+            //estas líneas podrían ser reemplazadas con updateTentativeDistance
+            int leastTentative = e->getData() + getManhattan(current, nextNode);
+            if(leastTentative < tentativeDistance){
+                leastCost = make_pair(nextNode, e->getData());
+                tentativeDistance = leastTentative;
+            }
         }
 
-        if(parent[current] != current){
-            BFSTree.addEdge(parent[current], current);
-        }
-
-        for(edge* edg : nodes[current]->edges){
-            N adjNode = edg->nodes[1]->data;
-            if(vis[adjNode]) continue;
-            vis[adjNode] = true;
-            parent[adjNode] = current;
-            next.push(adjNode);
-        }
+    }while(leastCost.first != current);
+    delete path;
+    return nullptr;
+}
+template <typename Tr>
+void Graph<Tr>::updateTentativeDistance(edge * e, N current, N nextNode, pair<N, E> &leastCost, E &tentativeDistance) {
+    int leastTentative = e->getData() + getManhattan(current, nextNode);
+    if(leastTentative < tentativeDistance){
+        leastCost = make_pair(nextNode, e->getData());
+        tentativeDistance = leastTentative;
     }
-
-    return BFSTree;
-}*/
+}
 
 typedef Graph<Traits> graph;
 

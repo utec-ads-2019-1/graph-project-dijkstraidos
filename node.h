@@ -32,6 +32,10 @@ class Node {
             this->x = node->x;
             this->y = node->y;
         }
+        
+        double getX(){ return x; }
+            
+        double getY(){ return y; }
 
         bool removeEdge(Node* nToRemove) {
             for(edge * e :edges){
