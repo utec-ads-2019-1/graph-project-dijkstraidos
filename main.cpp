@@ -9,6 +9,7 @@ int main(int argc, char *argv[]) {
     cin>>file;
     graph test(file);
     test.printInfo();
-    cout<<test.strongly_connected();
+    graph temp = test.BFS('a');
+    temp.BFS('a');
     return EXIT_SUCCESS;
 }

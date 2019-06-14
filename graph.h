@@ -89,13 +89,34 @@ class Graph {
         bool strongly_connected();
         bool bipartite();
 
-        self BFS(N);
-        self DFS(N);
+        self* BFS(N);
+        self* DFS(N);
 
-        self kruskalMST();
-        self primMST(N);
+        self* kruskalMST();
+        self* primMST(N);
 
         unordered_map<N, unordered_map<N,E>> FWSP();
+
+        unordered_map<N, pair<double, double>> getNodesOGL(){
+            unordered_map<N, pair<double, double>> pos;
+            for(auto nd : nodes){
+                pos[nd.first] = make_pair(nd.second->x, nd.second->y);
+            }
+            return pos;
+        }
+        vector<pair<pair<N, N>, E>> getEdgesOGL(){
+            unordered_map<N, unordered_map<N, bool>> added;
+            vector<pair<pair<N, N>, E>> pos;
+            for(auto nd : nodes){
+                for(edge* edg : nd.second->edges){
+                    N adjNd = edg->nodes[1]->data;
+                    if(!directed && added[adjNd][nd.first]) continue;
+                    added[nd.first][adjNd] = true;
+                    pos.push_back(make_pair(make_pair(nd.first, adjNd), edg->getData()));
+                }
+            }
+            return pos;
+        }
 
         ~Graph(){
             for(auto it : nodes){
@@ -478,12 +499,12 @@ bool Graph<Tr>::bipartite(){
 //Graph Search
 
 template <typename Tr>
-Graph<Tr> Graph<Tr>::BFS(N start){
+Graph<Tr>* Graph<Tr>::BFS(N start){
     unordered_map<N, N> parent;
     unordered_map<N, bool> vis;
     queue<N> next;
 
-    self BFSTree(directed, weighted);
+    self* BFSTree = new self(directed, weighted);
 
     vis[start] = true;
     parent[start] = start;
@@ -494,12 +515,12 @@ Graph<Tr> Graph<Tr>::BFS(N start){
         next.pop();
         cout<<current<<endl;
         
-        if(BFSTree.nodes.find(current) == BFSTree.nodes.end()){
-            BFSTree.addVertex(nodes[current]);
+        if(BFSTree->nodes.find(current) == BFSTree->nodes.end()){
+            BFSTree->addVertex(nodes[current]);
         }
 
         if(parent[current] != current){
-            BFSTree.addEdge(parent[current], current);
+            BFSTree->addEdge(parent[current], current);
         }
 
         for(edge* edg : nodes[current]->edges){
@@ -515,12 +536,12 @@ Graph<Tr> Graph<Tr>::BFS(N start){
 }
 
 template <typename Tr>
-Graph<Tr> Graph<Tr>::DFS(N start){
+Graph<Tr>* Graph<Tr>::DFS(N start){
     unordered_map<N, N> parent;
     unordered_map<N, bool> vis;
     stack<N> next;
 
-    self DFSTree(directed, weighted);
+    self* DFSTree = new self(directed, weighted);
 
     parent[start] = start;
     next.push(start);
@@ -532,12 +553,12 @@ Graph<Tr> Graph<Tr>::DFS(N start){
         vis[current] = true;
         cout<<current<<endl;
         
-        if(DFSTree.nodes.find(current) == DFSTree.nodes.end()){
-            DFSTree.addVertex(nodes[current]);
+        if(DFSTree->nodes.find(current) == DFSTree->nodes.end()){
+            DFSTree->addVertex(nodes[current]);
         }
 
         if(parent[current] != current){
-            DFSTree.addEdge(parent[current], current);
+            DFSTree->addEdge(parent[current], current);
         }
 
         for(edge* edg : nodes[current]->edges){
@@ -554,17 +575,16 @@ Graph<Tr> Graph<Tr>::DFS(N start){
 //Minumum Spanning Tree
 
 template <typename Tr>
-Graph<Tr> Graph<Tr>::kruskalMST(){
-    self MST; 
+Graph<Tr>* Graph<Tr>::kruskalMST(){
     disjoint_set<N> ds;
-    MST.weighted = true;
-    MST.directed = false;
+
+    self* MST = new self(false, weighted); 
 
     auto edgeCompare = [](edge* l, edge* r){return l->getData() < r->getData();};
     multiset<edge*, decltype(edgeCompare)> edges(edgeCompare);
     
     for(auto it : nodes){
-        MST.addVertex(it.second);
+        MST->addVertex(it.second);
         ds[it.first] = it.first;
         for(edge* edg : it.second->edges){
             edges.insert(edg);
@@ -576,7 +596,7 @@ Graph<Tr> Graph<Tr>::kruskalMST(){
         N nd2 = edg->nodes[1]->data;
         if(!ds.areInSameSet(nd1, nd2)){
             ds.joinSet(nd1, nd2);
-            MST.addEdge(nd1, nd2, edg->getData());
+            MST->addEdge(nd1, nd2, edg->getData());
         }
     }
 
@@ -584,16 +604,14 @@ Graph<Tr> Graph<Tr>::kruskalMST(){
 }
 
 template <typename Tr>
-Graph<Tr> Graph<Tr>::primMST(N start){
+Graph<Tr>* Graph<Tr>::primMST(N start){
     unordered_map<N, N> parent;
     unordered_map<N, bool> vis;
     unordered_map<N, E> weight;
 
     priority_queue<pair<E, N>, vector<pair<E, N>>, greater<pair<E, N>>> pq;
 
-    self MST;
-    MST.weighted = true;
-    MST.directed = false;
+    self* MST = new self(false, weighted); 
 
     pq.push(make_pair(0, start));
     parent[start] = start;
@@ -605,11 +623,11 @@ Graph<Tr> Graph<Tr>::primMST(N start){
         if(vis[curr]) continue;
         vis[curr] = true;
 
-        if(MST.nodes.find(curr) == MST.nodes.end()){
-            MST.addVertex(nodes[curr]);
+        if(MST->nodes.find(curr) == MST->nodes.end()){
+            MST->addVertex(nodes[curr]);
         }
         if(parent[curr] != curr){
-            MST.addEdge(parent[curr], curr, weig);
+            MST->addEdge(parent[curr], curr, weig);
         }
 
         for(edge* edg : nodes[curr]->edges){

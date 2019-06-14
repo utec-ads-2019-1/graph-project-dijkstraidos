@@ -14,7 +14,6 @@ class Node {
         EdgeSeq edges;
         N data;
 
-    private:
         double x;
         double y;
 
