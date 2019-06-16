@@ -454,16 +454,17 @@ bool Graph<Tr>::connected(){
 
 template <typename Tr>
 bool Graph<Tr>::strongly_connected(){
-    self bfs = BFS(nodes.begin()->first);
+    self * bfs = BFS(nodes.begin()->first);
 
-    if(bfs.nodes.size() != nodes.size()){
+    if(bfs->nodes.size() != nodes.size()){
         return false;
     }
+    
 
     self trans_graph = transpose();
-    self tbfs = trans_graph.BFS(nodes.begin()->first);
+    self* tbfs = trans_graph.BFS(nodes.begin()->first);
 
-    if(tbfs.nodes.size() != nodes.size()){
+    if(tbfs->nodes.size() != nodes.size()){
         return false;
     }
 
