@@ -14,6 +14,8 @@
 #include <string>
 #include <set>
 #include <climits>
+#include <pthread.h>
+#include <tuple>
 
 #include "node.h"
 #include "edge.h"
@@ -98,6 +100,8 @@ class Graph {
 
         unordered_map<N, unordered_map<N,E>> FWSP();
         self * aStar(N, N);
+        unordered_map<N, Graph<Tr> *>* parallel_aStar(N, vector<N> *);
+ 
 
         unordered_map<N, pair<double, double>> getNodesOGL(){
             unordered_map<N, pair<double, double>> pos;
@@ -146,6 +150,7 @@ class Graph {
         void updateTentativeDistance(edge *, N, N, pair<N, E> &, E &);
         
         int getManhattan(N, N);
+        static void * aStarAdapter(void * );
 };
 
 template <typename Tr>
@@ -756,6 +761,7 @@ Graph<Tr> * Graph<Tr>::aStar(N start, N end){
     delete path;
     return nullptr;
 }
+
 template <typename Tr>
 void Graph<Tr>::updateTentativeDistance(edge * e, N current, N nextNode, pair<N, E> &leastCost, E &tentativeDistance) {
     int leastTentative = e->getData() + getManhattan(current, nextNode);
@@ -763,6 +769,41 @@ void Graph<Tr>::updateTentativeDistance(edge * e, N current, N nextNode, pair<N,
         leastCost = make_pair(nextNode, e->getData());
         tentativeDistance = leastTentative;
     }
+}
+
+template <typename Tr>
+unordered_map<typename Graph<Tr>::N, Graph<Tr> *>* Graph<Tr>::parallel_aStar(N start, vector<N> * targets){
+    auto answer = new unordered_map<N, Graph<Tr> *>;
+    
+    pthread_t threadArr[targets->size()];
+    for(int i = 0; i < targets->size(); i++){
+        tuple<Graph<Tr>*, N, N> * data = new tuple<Graph<Tr>*, N, N>(this, start, (*targets)[i]);
+        pthread_create(&threadArr[i], NULL, aStarAdapter, (void*) data);
+    }
+
+    for(int i = 0; i < targets->size(); i++){ 
+        void * returnData;
+        pthread_join(threadArr[i], &returnData);
+        
+        N target = ((pair<N, Graph<Tr>*> *) returnData)->first;
+        Graph<Tr> * targetGraph = ((pair<N, Graph<Tr>*> *) returnData)->second;
+        (*answer)[target] = targetGraph; 
+    }
+    
+    return answer;
+}
+
+template <typename Tr>
+void * Graph<Tr>::aStarAdapter(void * x){
+   tuple<Graph<Tr>*, N, N> * data;
+   data = (tuple<Graph<Tr>*, N, N> *) x;
+
+   cout << "Start: " << get<1>(*data) << ". End: " << get<2>(*data) << endl;
+
+   Graph<Tr> * aStarResult = (get<0>(*data))->aStar(get<1>(*data), get<2>(*data));
+    
+   auto returnData = new pair<N, Graph<Tr> *>(get<2>(*data), aStarResult);
+   return (void*) returnData;
 }
 
 typedef Graph<Traits> graph;

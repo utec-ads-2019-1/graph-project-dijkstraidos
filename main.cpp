@@ -22,8 +22,20 @@ int main(int argc, char *argv[]) {
     cout << endl;
     test2->DFS('A');
 
-    graph* temp = test.BFS('a');
-    temp->BFS('a');
+    graph* temp = test.BFS('A');
+    temp->BFS('A');
+    
+    auto targets = new vector<char>;
+    targets->push_back('H');
+    targets->push_back('A');
+
+    unordered_map<char, graph*> * testMap = test.parallel_aStar('A', targets);
+    
+    cout << "Termina el paralelo"<< endl;
+
+    temp = (*testMap)['A'];
+    temp->BFS('A');
+    temp = ((*testMap)['H'])->BFS('A');
 
     return EXIT_SUCCESS;
 }
