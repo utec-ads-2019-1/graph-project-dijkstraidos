@@ -7,6 +7,7 @@ using namespace std;
 int main(int argc, char *argv[]) {
     string file;
     cin>>file;
+    //file = "test4.txt";
     graph test(file);
     test.printInfo();
     cout<<test.strongly_connected() << endl;
@@ -20,11 +21,12 @@ int main(int argc, char *argv[]) {
     auto test2 = test.aStar('A', 'H');
     test2->printInfo();
     cout << endl;
+    cout <<"Aquí empieza astar" << endl;
     test2->DFS('A');
 
     graph* temp = test.BFS('A');
     temp->BFS('A');
-    
+
     auto targets = new vector<char>;
     targets->push_back('H');
     targets->push_back('A');
