@@ -13,31 +13,33 @@ int main(int argc, char *argv[]) {
     cout<<test.strongly_connected() << endl;
 
     auto d = test.dijkstra('A');
-    auto it = d.begin();
     for(auto element : d){
-        cout << "Distancia a " << element.first << ": " << element.second.first << " (parent " << element.second.second << ")\n";
+        cout << "Camino a " << element.first << ": (peso " << (element.second)->graphWeight() <<")" << endl;
+        element.second->BFS('A');
     }
     
-    auto test2 = test.aStar('A', 'H');
+    auto test2 = test.aStar('A', 'Z');
     test2->printInfo();
     cout << endl;
-    cout <<"Aquí empieza astar" << endl;
+    cout <<"A *: (peso" << test2->graphWeight() << ")" << endl;
     test2->DFS('A');
-
+    cout << endl;
+    /*
     graph* temp = test.BFS('A');
-    temp->BFS('A');
+    temp->BFS('A');*/
 
     auto targets = new vector<char>;
-    targets->push_back('H');
-    targets->push_back('A');
+    targets->push_back('Z');
+    targets->push_back('F');
 
     unordered_map<char, graph*> * testMap = test.parallel_aStar('A', targets);
     
     cout << "Termina el paralelo"<< endl;
 
-    temp = (*testMap)['A'];
+    graph * temp = (*testMap)['Z'];
     temp->BFS('A');
-    temp = ((*testMap)['H'])->BFS('A');
+    cout << endl;
+    temp = ((*testMap)['F'])->BFS('A');
 
     return EXIT_SUCCESS;
 }

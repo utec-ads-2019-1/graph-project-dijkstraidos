@@ -94,7 +94,7 @@ class Graph {
         self* BFS(N);
         self* DFS(N);
 
-        unordered_map<N, pair<E, N>> dijkstra(N);
+        unordered_map<N, self*> dijkstra(N);
         self* kruskalMST();
         self* primMST(N);
 
@@ -147,11 +147,9 @@ class Graph {
         vertex_Type nonDirected_getType(node*);
         vertex_Type directed_getType(node*);
 
-        void updateTentativeDistance(edge *, N, N, pair<N, E> &, E &);
-        
         int getManhattan(N, N);
         static void * aStarAdapter(void * );
-        Graph<Tr> * retracePath(N, N, unordered_map<N, N>);
+        Graph<Tr> * retracePath(N, N, unordered_map<N, pair<N, E>>);
 };
 
 template <typename Tr>
@@ -387,7 +385,8 @@ vertex_Type Graph<Tr>::getType(node * n){
 template <typename Tr>
 typename Graph<Tr>::E Graph<Tr>::graphWeight(){
     E totalWeight = 0;
-    for(node* nd : nodes){
+    for(auto element : nodes){
+        node * nd = element.second;
         for(edge* edg : nd->edges){
             totalWeight += edg->getData();
         }
@@ -695,33 +694,44 @@ unordered_map<typename Graph<Tr>::N, unordered_map<typename Graph<Tr>::N, typena
 }
 
 template <typename Tr>
-unordered_map<typename Graph<Tr>::N, pair<typename Graph<Tr>::E, typename Graph<Tr>::N>> Graph<Tr>::dijkstra(N start){
-    if(!this->weighted) throw("Este grafo no es ponderado");
-    unordered_map<N, pair<E, N>> distances;
+unordered_map<typename Graph<Tr>::N, Graph<Tr> *> Graph<Tr>::dijkstra(N start){
+    //if(!this->weighted) throw("Este grafo no es ponderado");
+    unordered_map<N, E> distances;
+    unordered_map<N, pair<N, E>> parents;
     priority_queue<pair<E, N>, vector<pair<E,N>>, greater<pair<E, N>>> next;
 
-    distances[start] = make_pair(0, start);
+    parents[start] = make_pair(start, 0);
     next.push(make_pair(0,start));
 
     while(!next.empty()){
         N current = next.top().second;
         next.pop();
         
-        E distUntilNow = distances[current].first;
+        E distanceUntilNow = distances[current];
 
         for(edge* e : nodes[current]->edges){
-            if(distances.find(e->nodes[1]->data) == distances.end()){
-                next.push(make_pair(distUntilNow + e->getData(), e->nodes[1]->data));
-                distances[e->nodes[1]->data] = make_pair(distUntilNow + e->getData(), current);
+            N neighbor = e->nodes[1]->data;
+            E tentativeDistance = e->getData() + distanceUntilNow;
+            if(distances.find(neighbor) == distances.end()){
+                parents[neighbor] = make_pair(current, e->getData());
+                distances[neighbor] = tentativeDistance;
+                next.push(make_pair(tentativeDistance, neighbor));
                 continue;
             }
-            if(distances[e->nodes[1]->data].first > e->getData() + distUntilNow){
-                distances[e->nodes[1]->data] = make_pair(e->getData() + distUntilNow, current);
-                next.push(make_pair(e->getData() + distUntilNow, current));
+            if(distances[neighbor] > tentativeDistance){
+                distances[neighbor] = tentativeDistance;
+                parents[neighbor] = make_pair(current, e->getData());
+                next.push(make_pair(tentativeDistance, current));
             }
         }
     }
-    return distances;
+    
+    unordered_map<N, self *> answer;
+    for(auto n : nodes){
+        answer[n.first] = retracePath(start, n.first, parents);
+    }
+
+    return answer;
 }
 
 template <typename Tr>
@@ -735,11 +745,11 @@ Graph<Tr> * Graph<Tr>::aStar(N start, N end){
     unordered_map<N, bool> notClosed;
     priority_queue<pair<E, N>, vector<pair<E,N>>, greater<pair<E, N>>> toVisit;
 
-    unordered_map<N, N> parents;
+    unordered_map<N, pair<N, E>> parents;
     unordered_map<N, E> costToEnd;
     unordered_map<N, E> costToNode;
 
-    parents[start] = start;
+    parents[start] = make_pair(start, 0);
     costToEnd[start] = getManhattan(start, end);
     costToNode[start] = 0;
     toVisit.push(make_pair(costToEnd[start], start));
@@ -763,7 +773,7 @@ Graph<Tr> * Graph<Tr>::aStar(N start, N end){
                 notClosed[next] = true;
             }else if(tentativeCost >= costToNode[next]) continue;
 
-            parents[next] = current;
+            parents[next] = make_pair(current, e->getData());
             costToNode[next] = tentativeCost;
             costToEnd[next] = tentativeCost + getManhattan(next, end);
         }
@@ -773,59 +783,16 @@ Graph<Tr> * Graph<Tr>::aStar(N start, N end){
 }
 
 template <typename Tr>
-Graph<Tr> * Graph<Tr>::retracePath(N start, N end, unordered_map<N,N> parents){
-    auto path = new Graph<Tr>; //probablemente se debe usar un constructor que haga que tenga el mismo tipo que el anterior
+Graph<Tr> * Graph<Tr>::retracePath(N start, N end, unordered_map<N, pair<N, E>> parents){
+    if(parents.find(end) == parents.end()) return nullptr;
+    auto path = new Graph<Tr>(directed, weighted); //probablemente se debe usar un constructor que haga que tenga el mismo tipo que el anterior
     path->addVertex(end);
     do{
-        path->addVertex(parents[end]);
-        path->addEdge(parents[end], end);
-        end = parents[end];
-    }while(parents[end] != end);
+        path->addVertex(parents[end].first);
+        path->addEdge(parents[end].first, end, parents[end].second);
+        end = parents[end].first;
+    }while(parents[end].first != end);
     return path;
-}
-
-
-/*template <typename Tr>
-Graph<Tr> * Graph<Tr>::aStar(N start, N end){
-    auto path = new Graph<Tr>;
-    unordered_map<N, bool> visited;
-    N current = start;
-    pair<N, E> leastCost;
-    leastCost= make_pair(start, 0);
-
-    do{
-        path->addVertex(leastCost.first);
-        if (leastCost.first != start) path->addEdge(current, leastCost.first, leastCost.second);
-
-        if(leastCost.first == end) return path;
-        visited[leastCost.first] = true;
-        
-        current = leastCost.first;
-        int tentativeDistance = numeric_limits<E>::max();
-
-        for(edge* e : nodes[current]->edges){
-            N nextNode = e->nodes[1]->data;
-            if(visited[nextNode]) continue;
-            //estas líneas podrían ser reemplazadas con updateTentativeDistance
-            int leastTentative = e->getData() + getManhattan(current, nextNode);
-            if(leastTentative < tentativeDistance){
-                leastCost = make_pair(nextNode, e->getData());
-                tentativeDistance = leastTentative;
-            }
-        }
-
-    }while(leastCost.first != current);
-    delete path;
-    return nullptr;
-}*/
-
-template <typename Tr>
-void Graph<Tr>::updateTentativeDistance(edge * e, N current, N nextNode, pair<N, E> &leastCost, E &tentativeDistance) {
-    int leastTentative = e->getData() + getManhattan(current, nextNode);
-    if(leastTentative < tentativeDistance){
-        leastCost = make_pair(nextNode, e->getData());
-        tentativeDistance = leastTentative;
-    }
 }
 
 template <typename Tr>
@@ -854,8 +821,6 @@ template <typename Tr>
 void * Graph<Tr>::aStarAdapter(void * x){
    tuple<Graph<Tr>*, N, N> * data;
    data = (tuple<Graph<Tr>*, N, N> *) x;
-
-   cout << "Start: " << get<1>(*data) << ". End: " << get<2>(*data) << endl;
 
    Graph<Tr> * aStarResult = (get<0>(*data))->aStar(get<1>(*data), get<2>(*data));
     
