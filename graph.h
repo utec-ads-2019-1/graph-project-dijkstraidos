@@ -786,9 +786,9 @@ template <typename Tr>
 Graph<Tr> * Graph<Tr>::retracePath(N start, N end, unordered_map<N, pair<N, E>> parents){
     if(parents.find(end) == parents.end()) return nullptr;
     auto path = new Graph<Tr>(directed, weighted); //probablemente se debe usar un constructor que haga que tenga el mismo tipo que el anterior
-    path->addVertex(end);
+    path->addVertex(nodes[end]);
     do{
-        path->addVertex(parents[end].first);
+        path->addVertex(nodes[parents[end].first]);
         path->addEdge(parents[end].first, end, parents[end].second);
         end = parents[end].first;
     }while(parents[end].first != end);

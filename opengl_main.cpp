@@ -1,4 +1,6 @@
-#include <bits/stdc++.h> 
+#include <iostream> 
+#include <vector>
+#include <sstream>
 #include <GLUT/glut.h> 
 #include <OpenGl/glu.h>
 #include <OpenGL/gl.h>
@@ -12,7 +14,6 @@ using namespace std;
 
 graph* mg;
 string mg_name;
-stack<graph*> undo;
 vector<graph*> loaded_graphs;
 vector<string> loaded_graph_names;
 void* currentfont;
@@ -169,6 +170,16 @@ void update(){
     else if(command_args[0] == "kruskal"){
         mg = mg->kruskalMST();
         mg_name = mg_name + " - KRUSKAL";
+    }
+
+    else if(command_args[0] == "dijkstra"){
+        mg = mg->dijkstra(command_args[1][0])[command_args[2][0]];
+        mg_name = mg_name + " - DIJKSTRA";
+    }
+
+    else if(command_args[0] == "astar"){
+        mg = mg->aStar(command_args[1][0], command_args[2][0]);
+        mg_name = mg_name + " - A*";
     }
 
     else{
