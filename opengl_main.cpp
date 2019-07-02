@@ -183,7 +183,7 @@ void update(){
     }
 
     else if(command_args[0] == "bellmanFord"){
-        mg = mg->dijkstra(command_args[1][0])[command_args[2][0]];
+        mg = mg->BellmanFord(command_args[1][0])[command_args[2][0]];
         mg_name = mg_name + " - BELLMAN FORD";
     }
     else{
