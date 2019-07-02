@@ -12,34 +12,40 @@ int main(int argc, char *argv[]) {
     test.printInfo();
     cout<<test.strongly_connected() << endl;
 
-    auto d = test.dijkstra('A');
+    auto d = test.BellmanFord('1');
     for(auto element : d){
         cout << "Camino a " << element.first << ": (peso " << (element.second)->graphWeight() <<")" << endl;
-        element.second->BFS('A');
+        element.second->BFS('1');
     }
     
-    auto test2 = test.aStar('A', 'Z');
-    test2->printInfo();
-    cout << endl;
-    cout <<"A *: (peso" << test2->graphWeight() << ")" << endl;
-    test2->DFS('A');
-    cout << endl;
-    /*
-    graph* temp = test.BFS('A');
-    temp->BFS('A');*/
-
-    auto targets = new vector<char>;
-    targets->push_back('Z');
-    targets->push_back('F');
-
-    unordered_map<char, graph*> * testMap = test.parallel_aStar('A', targets);
+    // auto d = test.dijkstra('A');
+    // for(auto element : d){
+    //     cout << "Camino a " << element.first << ": (peso " << (element.second)->graphWeight() <<")" << endl;
+    //     element.second->BFS('A');
+    // }
     
-    cout << "Termina el paralelo"<< endl;
+    // auto test2 = test.aStar('A', 'Z');
+    // test2->printInfo();
+    // cout << endl;
+    // cout <<"A *: (peso" << test2->graphWeight() << ")" << endl;
+    // test2->DFS('A');
+    // cout << endl;
+    // /*
+    // graph* temp = test.BFS('A');
+    // temp->BFS('A');*/
 
-    graph * temp = (*testMap)['Z'];
-    temp->BFS('A');
-    cout << endl;
-    temp = ((*testMap)['F'])->BFS('A');
+    // auto targets = new vector<char>;
+    // targets->push_back('Z');
+    // targets->push_back('F');
+
+    // unordered_map<char, graph*> * testMap = test.parallel_aStar('A', targets);
+    
+    // cout << "Termina el paralelo"<< endl;
+
+    // graph * temp = (*testMap)['Z'];
+    // temp->BFS('A');
+    // cout << endl;
+    // temp = ((*testMap)['F'])->BFS('A');
 
     return EXIT_SUCCESS;
 }
