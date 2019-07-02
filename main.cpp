@@ -12,10 +12,10 @@ int main(int argc, char *argv[]) {
     test.printInfo();
     cout<<test.strongly_connected() << endl;
 
-    auto d = test.BellmanFord('1');
+    auto d = test.BellmanFord('A');
     for(auto element : d){
         cout << "Camino a " << element.first << ": (peso " << (element.second)->graphWeight() <<")" << endl;
-        element.second->BFS('1');
+        element.second->BFS('A');
     }
     
     // auto d = test.dijkstra('A');
