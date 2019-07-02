@@ -69,6 +69,10 @@ class Node {
             }
             std::cout << std::string("There is no such edge.");
         }
+
+        EdgeSeq getEdges() {
+            return edges;
+        }
 };
 
 #endif

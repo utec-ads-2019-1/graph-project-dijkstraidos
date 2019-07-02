@@ -101,6 +101,7 @@ class Graph {
         unordered_map<N, unordered_map<N,E>> FWSP();
         self * aStar(N, N);
         unordered_map<N, Graph<Tr> *>* parallel_aStar(N, vector<N> *);
+        unordered_map<N, self* > BellmanFord(N start);
  
 
         unordered_map<N, pair<double, double>> getNodesOGL(){
@@ -826,6 +827,52 @@ void * Graph<Tr>::aStarAdapter(void * x){
     
    auto returnData = new pair<N, Graph<Tr> *>(get<2>(*data), aStarResult);
    return (void*) returnData;
+}
+
+template <typename Tr>
+unordered_map<typename Graph<Tr>::N, Graph<Tr>* > Graph<Tr>::BellmanFord(typename Graph<Tr>::N start) {
+    unordered_map<N, E> dist;
+    unordered_map<node*, N> sedon;
+    E inf = numeric_limits<E>::max();
+    typename Graph<Tr>::EdgeSeq edges;
+    unordered_map<N, pair<N, E>> parents;
+    parents[start] = make_pair(start, 0);
+
+    for(auto n : nodes) {
+        dist[n.first] = inf;
+        sedon[n.second] = n.first;
+        typename Graph<Tr>::EdgeSeq nodesEdges = n.second->getEdges();
+        for(typename Graph<Tr>::edge* e : nodesEdges)
+            edges.push_back(e);
+    }
+    dist[start] = 0;
+
+    int V = nodes.size();
+
+    for(int i = 0; i < V-1; ++i) {
+        for(typename Graph<Tr>::edge* e: edges) {
+            N u = sedon[e->nodes[0]];
+            N v = sedon[e->nodes[1]];
+            E weight = e->getData();
+            if(dist[u] != inf && dist[u] + weight < dist[v]) {
+                dist[v] = dist[u] + weight;
+                parents[v] = make_pair(u, weight);
+            }
+        }
+    }
+
+    for(typename Graph<Tr>::edge* e: edges) {
+        N u = sedon[e->nodes[0]];
+        N v = sedon[e->nodes[1]];
+        E weight = e->getData();
+        if(dist[u] != inf && dist[u] + weight < dist[v])
+            cout << "El grafo contiene un ciclo de pesos negativos" << endl;
+    }
+
+    unordered_map<N, self*> answer;
+    for(auto n : nodes)
+        answer[n.first] = retracePath(start, n.first, parents);
+    return answer;
 }
 
 typedef Graph<Traits> graph;
