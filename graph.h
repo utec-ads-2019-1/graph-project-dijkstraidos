@@ -98,7 +98,7 @@ class Graph {
         self* kruskalMST();
         self* primMST(N);
 
-        unordered_map<N, unordered_map<N,E>> FWSP();
+        pair<unordered_map<typename Graph<Tr>::N, unordered_map<typename Graph<Tr>::N, typename Graph<Tr>::E>>, unordered_map<typename Graph<Tr>::N, unordered_map<typename Graph<Tr>::N, typename Graph<Tr>::N>>> FWSP();
         self * aStar(N, N);
         unordered_map<N, Graph<Tr> *>* parallel_aStar(N, vector<N> *);
         unordered_map<N, self* > BellmanFord(N start);
@@ -658,13 +658,15 @@ Graph<Tr>* Graph<Tr>::primMST(N start){
 }
 
 template <typename Tr>
-unordered_map<typename Graph<Tr>::N, unordered_map<typename Graph<Tr>::N, typename Graph<Tr>::E>> Graph<Tr>::FWSP(){
+pair<unordered_map<typename Graph<Tr>::N, unordered_map<typename Graph<Tr>::N, typename Graph<Tr>::E>>, unordered_map<typename Graph<Tr>::N, unordered_map<typename Graph<Tr>::N, typename Graph<Tr>::N>>> Graph<Tr>::FWSP(){
     unordered_map<N, unordered_map<N, E>> dist;
+    unordered_map<N, unordered_map<N, N>> parent;
     E inf = numeric_limits<E>::max();
 
     for(auto it : nodes){
         for(auto jt : nodes){
             dist[it.first][jt.first] = inf;
+            parent[it.first][jt.first] = jt.first;
             if(it.first == jt.first){
                 dist[it.first][jt.first] = 0;
             }
@@ -675,6 +677,7 @@ unordered_map<typename Graph<Tr>::N, unordered_map<typename Graph<Tr>::N, typena
         for(edge* edg : it.second->edges){
             N an = edg->nodes[1]->data;
             dist[it.first][an] = edg->getData();
+            parent[it.first][an] = an;
         }
     }
 
@@ -684,14 +687,16 @@ unordered_map<typename Graph<Tr>::N, unordered_map<typename Graph<Tr>::N, typena
             N i = ii.first;
             for(auto ij : nodes){
                 N j = ij.first;
-                if(dist[i][k] < inf  && dist[k][j] < inf){
-                    dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j]);;
+                E temp = dist[i][k] + dist[k][j];
+                if(dist[i][k] < inf  && dist[k][j] < inf && temp < dist[i][j]){
+                    dist[i][j] = temp;
+                    parent[i][j] = k;
                 }
             }
         }
     }
 
-    return dist;
+    return make_pair(dist, parent);
 }
 
 template <typename Tr>
